@@ -1,0 +1,52 @@
+{
+  "name": "root",
+  "description": "Node.js utilities to manage Rocket.Chat instances and drive integrations.",
+  "homepage": "https://github.com/Amazebot/rocket-control",
+  "repository": "git@github.com:Amazebot/rocket-control.git",
+  "author": "Tim Kinnane <tim.kinnane@amazebot.chat>",
+  "license": "MIT",
+  "keywords": [
+    "rocket.chat",
+    "chat",
+    "chatops",
+    "messaging",
+    "CUI",
+    "typescript",
+    "REST",
+    "DDP"
+  ],
+  "private": true,
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "scripts": {
+    "pretest": "lerna bootstrap",
+    "test": "nyc mocha **/*.spec.ts",
+    "compile": "rimraf ./packages/*/lib && tsc -b packages",
+    "commit": "git-cz",
+    "prepublish": "yarn compile",
+    "publish": "lerna publish",
+    "updated": "lerna updated",
+    "practice": "lerna publish --skip-git --skip-npm --conventional-commits"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
+    "@types/sinon": "^5.0.7",
+    "chai": "^4.2.0",
+    "commitizen": "^3.0.5",
+    "dotenv": "^6.1.0",
+    "lerna": "^3.5.0",
+    "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
+    "rimraf": "^2.6.2",
+    "sinon": "^7.1.1",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "tslint-config-standard": "^8.0.1",
+    "typedoc": "^0.13.0",
+    "typescript": "^3.1.6"
+  }
+}
