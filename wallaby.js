@@ -4,6 +4,7 @@ module.exports = function (wallaby) {
     name: 'rocket-control',
     files: [
       'tsconfig.json',
+      'package.json',
       { pattern: 'packages/**/src/**/*.ts', load: true },
       { pattern: 'packages/**/src/**/*.spec.ts', ignore: true },
       { pattern: 'packages/**/node_modules/**', ignore: true }
