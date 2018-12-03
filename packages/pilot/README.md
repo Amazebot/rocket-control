@@ -39,7 +39,7 @@ environment variables use all caps with underscore separators and prefix.
 
 ```
 import * as pilot from '@amazebot/rocket-pilot'
-const instance = pilot.instance.load() // same as pilot.instance.load('default')
+const instance = pilot.instance.load()
 console.log(instance.url)
 ```
 
@@ -52,11 +52,11 @@ console.log(instance.url)
 
 ```
 import * as pilot from '@amazebot/rocket-pilot'
-const prod = pilot.instance.key('production').load()
+const prod = pilot.instance.key('production').load('production')
 console.log(prod.url) // my.chat
 ```
 
-`pilot.instance.key('production').load()` loads from prefixed vars:
+`pilot.instance.key('production').load('production)` loads from prefixed vars:
 - env `RC_PRODUCTION_URL="my.chat"`
 - cli `--rc-production-url my.chat`
 - package json `rcConfig: { productionUrl: 'my.chat' }`
@@ -95,7 +95,7 @@ instead of `.instance`. Examples below:
 
 `pilot.user.get('username')` will return the default user's username.
 
-`pilot.user.key('admin').load()` will load `RC_ADMIN_USERNAME` etc.
+`pilot.user.key('admin').load('admin')` will load `RC_ADMIN_USERNAME` etc.
 
 `pilot.user.key('admin').get('admin')` will return the settings loaded above.
 

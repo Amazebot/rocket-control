@@ -80,14 +80,18 @@ export class Settings {
 
   /** Generic config setter */
   set (key: string, value: any) {
-    if (!this.config) throw new Error('Cannot set settings before `.load()`.')
+    if (Object.keys(this.config).length === 0) {
+      throw new Error('Cannot set settings before load.')
+    }
     this.config[key] = value
     this.updates[key] = value
   }
 
   /** Generic config clear */
   unset (key: string) {
-    if (!this.config) throw new Error('Cannot unset settings before `.load()`.')
+    if (Object.keys(this.config).length === 0) {
+      throw new Error('Cannot unset settings before load.')
+    }
     delete this.config[key]
     delete this.updates[key]
     const opt = this.options[hyphenate(key)]

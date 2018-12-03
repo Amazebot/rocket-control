@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
     "target": "ES2017",
     "module": "commonjs",
-    "lib": ["dom", "es2017"],
+    "declaration": true,
+    "composite": true,
     "removeComments": true,
     "strict": true,
     "alwaysStrict": true,

@@ -15,12 +15,12 @@ export class Pilot {
     }
   })
   user = new Collection({
-    'user': {
+    'username': {
       type: 'string',
       description: 'Username for account login',
       default: 'admin'
     },
-    'pass': {
+    'password': {
       type: 'string',
       description: 'Password for account login',
       default: 'pass'

@@ -11,7 +11,12 @@ export class Collection {
   }
 
   /** Get an item in collection by key. */
-  key = (key: string) => this.items[key]
+  key = (key: string) => {
+    if (Object.keys(this.items).indexOf(key) < 0) {
+      this.items[key] = new Settings(this.options)
+    }
+    return this.items[key]
+  }
 
   /** Load the default item. */
   load = () => this.key('default').load()

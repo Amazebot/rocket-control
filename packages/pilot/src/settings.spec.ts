@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { Settings, IOptions, hyphenate, camelCase, envFormat } from './settings'
 let initOpts: IOptions = { 'test-setting': { type: 'boolean', default: false } }
 
-describe('[settings]', () => {
+describe('[pilot]', () => {
   beforeEach(() => process.env.RC_TEST_SETTING = undefined)
   describe('.envFormat', () => {
     it('converts hyphenated value to env format', () => {
@@ -51,7 +51,7 @@ describe('[settings]', () => {
         settings.load()
         expect(settings.config).to.have.property('testSetting', false)
       })
-      it('loads defined options from env with prefix', () => {
+      it('loads defined options from env with global prefix', () => {
         const settings = new Settings(initOpts)
         process.env.RC_TEST_SETTING = 'true'
         settings.load()
@@ -70,7 +70,7 @@ describe('[settings]', () => {
         settings.load()
         expect(settings.config).to.have.property('testSetting', true)
       })
-      it('loads settings with prefix', () => {
+      it('loads settings with key prefix', () => {
         const settings = new Settings(initOpts)
         process.env.RC_PREFIX_TEST_SETTING = 'true'
         settings.load('prefix')
@@ -107,6 +107,10 @@ describe('[settings]', () => {
       })
     })
     describe('.set', () => {
+      it('throws if called before load', () => {
+        const settings = new Settings(initOpts)
+        expect(() => settings.set('testSetting', true)).to.throw()
+      })
       it('assigns given setting', () => {
         const settings = new Settings(initOpts)
         settings.load()
@@ -123,6 +127,10 @@ describe('[settings]', () => {
       })
     })
     describe('.unset', () => {
+      it('throws if called before load', () => {
+        const settings = new Settings(initOpts)
+        expect(() => settings.unset('testSetting')).to.throw()
+      })
       it('restores defaults for options', () => {
         const settings = new Settings(initOpts)
         settings.load()
