@@ -2,12 +2,23 @@ import 'dotenv/config'
 import * as yargs from 'yargs'
 
 /** Utility for converting option keys, from fooBar to foo-bar. */
+export function envFormat (str: string) {
+  str = str.replace(/([a-z])([A-Z])/g, (g) => `${g[0]}_${g[1].toLowerCase()}`)
+  if (str.toLowerCase() === str) str = str.toUpperCase()
+  return str.replace(/-/g, '_')
+}
+
+/** Utility for converting option keys, from fooBar to FOO_BAR. */
 export function hyphenate (str: string) {
+  if (str.toUpperCase() === str) str = str.toLowerCase()
+  str = str.replace(/_/g, '-')
   return str.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`)
 }
 
 /** Utility for converting option keys, from foo-bar to fooBar */
 export function camelCase (str: string) {
+  if (str.toUpperCase() === str) str = str.toLowerCase()
+  str = str.replace(/_/g, '-')
   return str.replace(/-([a-z])/gi, (g) => g[1].toUpperCase())
 }
 
@@ -53,8 +64,6 @@ export class Settings {
       .config()
       .alias('config', 'c')
       .example('config', '-c rc-config.json')
-      .alias('version', 'v')
-      .strict()
       .argv
     const loaded: { [key: string]: any } = {}
     for (let key in this.options) {

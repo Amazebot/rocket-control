@@ -1,14 +1,43 @@
 import 'mocha'
 import { expect } from 'chai'
-import { Settings, IOptions } from './settings'
-let initOpts: IOptions = {
-  'test-setting': {
-    type: 'boolean',
-    default: false
-  }
-}
+import { Settings, IOptions, hyphenate, camelCase, envFormat } from './settings'
+let initOpts: IOptions = { 'test-setting': { type: 'boolean', default: false } }
 
 describe('[settings]', () => {
+  beforeEach(() => process.env.RC_TEST_SETTING = undefined)
+  describe('.envFormat', () => {
+    it('converts hyphenated value to env format', () => {
+      expect(envFormat('my-var')).to.equal('MY_VAR')
+    })
+    it('converts camel case to env format', () => {
+      expect(envFormat('myVar')).to.equal('MY_VAR')
+    })
+    it('leaves env format value unchanged', () => {
+      expect(envFormat('MY_VAR')).to.equal('MY_VAR')
+    })
+  })
+  describe('.hyphenate', () => {
+    it('converts env format to hyphenated value', () => {
+      expect(hyphenate('MY_VAR')).to.equal('my-var')
+    })
+    it('converts camel case to hyphenated value', () => {
+      expect(hyphenate('myVar')).to.equal('my-var')
+    })
+    it('leaves hyphenated value unchanged', () => {
+      expect(hyphenate('my-var')).to.equal('my-var')
+    })
+  })
+  describe('.camelCase', () => {
+    it('converts env format to camel case value', () => {
+      expect(camelCase('MY_VAR')).to.equal('myVar')
+    })
+    it('converts hyphenated to camel case value', () => {
+      expect(camelCase('my-var')).to.equal('myVar')
+    })
+    it('leaves camel case value unchanged', () => {
+      expect(camelCase('myVar')).to.equal('myVar')
+    })
+  })
   describe('Settings', () => {
     describe('Constructor', () => {
       it('saves defined options', () => {
@@ -17,7 +46,6 @@ describe('[settings]', () => {
       })
     })
     describe('.load', () => {
-      beforeEach(() => process.env.RC_TEST_SETTING = undefined)
       it('loads option defaults', () => {
         const settings = new Settings(initOpts)
         settings.load()
@@ -102,18 +130,14 @@ describe('[settings]', () => {
         settings.unset('testSetting')
         expect(settings.config).to.have.property('testSetting', false)
       })
-      /**
-       * @todo Fix clearing of args loaded again via argv
-       *       Disabled to pass because it's not a breaking bug.
-       */
-      // it('subsequent loads get defaults', () => {
-      //   const settings = new Settings(initOpts)
-      //   settings.load()
-      //   settings.set('testSetting', true)
-      //   settings.unset('testSetting')
-      //   settings.load()
-      //   expect(settings.config).to.have.property('testSetting', false)
-      // })
+      it('subsequent loads get defaults', () => {
+        const settings = new Settings(initOpts)
+        settings.load()
+        settings.set('testSetting', true)
+        settings.unset('testSetting')
+        settings.load()
+        expect(settings.config).to.have.property('testSetting', false)
+      })
     })
     describe('.extend', () => {
       it('allows defining new options after load', () => {
