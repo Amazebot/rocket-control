@@ -3,7 +3,7 @@
 [yarn]: https://yarnpkg.com/
 [rc]: https://rocket.chat/
 [mongo]: https://www.mongodb.com/
-[pilot]: https://github.com/Amazebot/rocket-control/tree/master/packages/@amazebot
+[config]: https://github.com/Amazebot/util/tree/master/packages/config
 
 # 🚀 Rocket Control
 Node.js utilities to manage Rocket.Chat instances and drive integrations
@@ -15,13 +15,12 @@ Node.js utilities to manage Rocket.Chat instances and drive integrations
 
 ---
 
-## Meet the family (in development)
+## Meet the family
 
-### 👨‍✈️ Rocket Pilot
-Centralised Rocket.Chat user credentials and connection settings.
-
-### 🔌 Rocket Socket
+### 🔌 Rocket Socket (beta)
 Communicate with Rocket.Chat Realtime API via websocket (DDP).
+
+## In development...
 
 ### 🛏️ Rocket Rest
 Simple handlers for calling Rocket.Chat REST API endpoints.
@@ -29,11 +28,14 @@ Simple handlers for calling Rocket.Chat REST API endpoints.
 ### 🤖 Rocket Bot
 Consume Rocket.Chat message streams and automate method calls.
 
-### 👨‍🎤 Rocket Sims
+### 👨‍🎤 Rocket Sim
 Populate Rocket.Chat with mock users and messages for testing.
 
 ### 💻 Rocket Command
 CLI to manage and provision Rocket.Chat instances and databases.
+
+### 📓 Rocket Logger
+Basic log handling with overrides for use within other modules.
 
 ---
 
@@ -42,17 +44,17 @@ CLI to manage and provision Rocket.Chat instances and databases.
 [Node.js][node] is required, recommended with [Yarn][yarn] as a package manager.
 
 Environment configs can be loaded from `.env` file or the server environment.
-
-e.g. for the admin user. create a `.env` file with the following:
+All configs used by Rocket Control packages use the `RC_` prefix.
+e.g. for the default user. create a `.env` file with the following:
 
 ```
-RC_ADMIN_USER="admin"
-RC_ADMIN_PASS="pass"
+RC_USER="admin"
+RC_PASS="pass"
 ```
-
-All configs used by Rocket Control packages use the `RC_` prefix. Additional env configs can also be generated through Rocket Pilot, such as adding additional user credentials for bot accounts.
 
 See the README in each of the [package paths](https://github.com/Amazebot/rocket-control/tree/master/packages) for further usage instructions.
+
+For more detail on how config is loaded, see the config utility [README][config].
 
 ## Development
 

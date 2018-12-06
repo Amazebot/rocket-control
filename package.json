@@ -21,23 +21,40 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -e $GIT_PARAMS"
+    }
+  },
   "scripts": {
+    "add:local": "yarn add --registry http://localhost:4873",
     "pretest": "lerna bootstrap",
-    "test": "nyc mocha **/*.spec.ts",
+    "test": "nyc mocha **/*.spec.ts --opts mocha.opts",
+    "precompile": "yarn test",
     "compile": "rimraf ./packages/*/lib && tsc -b packages",
     "commit": "git-cz",
-    "prepublish": "yarn compile",
-    "publish": "lerna publish",
     "updated": "lerna updated",
-    "practice": "lerna publish --skip-git --skip-npm --conventional-commits"
+    "practice": "yarn release --skip-git --skip-npm",
+    "prerelease": "yarn compile",
+    "release": "lerna publish",
+    "release:next": "yarn release --npm-tag next",
+    "release:local": "yarn release --skip-git --no-git-reset --registry http://localhost:4873",
+    "rollback:local": "lerna exec -- npm unpublish --registry http://localhost:4873"
   },
   "devDependencies": {
+    "@commitlint/cli": "^7.2.1",
+    "@commitlint/config-conventional": "^7.1.2",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
     "@types/sinon": "^5.0.7",
     "chai": "^4.2.0",
     "commitizen": "^3.0.5",
-    "dotenv": "^6.1.0",
+    "dotenv": "^6.2.0",
     "lerna": "^3.5.0",
     "mocha": "^5.2.0",
     "nyc": "^13.1.0",
