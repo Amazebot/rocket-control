@@ -95,7 +95,7 @@ export class Socket extends EventEmitter {
       support: ['1', 'pre2', 'pre1']
     }, 'connected')
     this.session = connected.session
-    this.ping().catch((err) => logger.error(`[ddp] Unable to ping server: ${err.message}`))
+    this.ping().catch((err) => logger.error(`[socket] Unable to ping server: ${err.message}`))
     this.emit('open')
     if (this.resume) await this.login(this.resume)
     return callback(this.connection)
@@ -103,7 +103,7 @@ export class Socket extends EventEmitter {
 
   /** Emit close event so it can be used for promise resolve in close() */
   onClose (e: any) {
-    logger.info(`[ddp] Close (${e.code}) ${e.reason}`)
+    logger.info(`[socket] Close (${e.code}) ${e.reason}`)
     this.emit('close', e)
     if (e.code !== 1000) return this.reopen()
   }
@@ -117,7 +117,7 @@ export class Socket extends EventEmitter {
   onMessage (e: any) {
     const data = (e.data) ? JSON.parse(e.data) : undefined
     // console.log(inspect({ data }, { depth: 4 })) // 👈  very useful for debugging missing responses
-    if (!data) return logger.error(`[ddp] JSON parse error: ${e.message}`)
+    if (!data) return logger.error(`[socket] JSON parse error: ${e.message}`)
     if (data.collection) this.emit(data.collection, data)
     const handlers = []
     const matcher = (handler: IHandler) => {
@@ -164,7 +164,7 @@ export class Socket extends EventEmitter {
     this.openTimeout = setTimeout(async () => {
       delete this.openTimeout
       await this.open()
-        .catch((err) => logger.error(`[ddp] Reopen error: ${err.message}`))
+        .catch((err) => logger.error(`[socket] Reopen error: ${err.message}`))
     }, this.config.reopen)
   }
 
@@ -201,7 +201,7 @@ export class Socket extends EventEmitter {
     return new Promise((resolve, reject) => {
       this.sent += 1
       const id = obj.id || `ddp-${ this.sent }`
-      if (!this.connection) throw new Error('[ddp] sending without open connection')
+      if (!this.connection) throw new Error('[socket] sending without open connection')
       this.connection.send(JSON.stringify({ ...obj, id }))
       if (typeof msg === 'string') {
         this.handlers.push({ id, msg, callback: (data) => (data.error)
@@ -243,7 +243,7 @@ export class Socket extends EventEmitter {
   async call (method: string, ...params: any[]) {
     const response = await this.send({ msg: 'method', method, params })
       .catch((err) => {
-        logger.error(`[ddp] Call error: ${err.message}`)
+        logger.error(`[socket] Call error: ${err.message}`)
         throw err
       })
     return (response.result) ? response.result : response
@@ -310,7 +310,7 @@ export class Socket extends EventEmitter {
    * @param params    Params sent to the subscription request
    */
   subscribe (name: string, params: any[], callback?: ICallback) {
-    logger.info(`[ddp] Subscribe to ${name}, param: ${JSON.stringify(params)}`)
+    logger.info(`[socket] Subscribe to ${name}, param: ${JSON.stringify(params)}`)
     return this.send({ msg: 'sub', name, params }, 'ready')
       .then((result) => {
         const id = (result.subs) ? result.subs[0] : undefined
@@ -322,7 +322,7 @@ export class Socket extends EventEmitter {
         return subscription
       })
       .catch((err) => {
-        logger.error(`[ddp] Subscribe error: ${err.message}`)
+        logger.error(`[socket] Subscribe error: ${err.message}`)
         throw err
       })
   }
@@ -338,13 +338,13 @@ export class Socket extends EventEmitter {
 
   /** Unsubscribe to server stream, resolve with unsubscribe request result */
   unsubscribe (id: any) {
-    if (!this.subscriptions[id]) return Promise.reject(id)
+    if (!this.subscriptions[id]) return Promise.resolve()
     delete this.subscriptions[id]
     return this.send({ msg: 'unsub', id }, 'result', 'nosub')
       .then((data: any) => data.result || data.subs)
       .catch((err) => {
         if (!err.msg && err.msg !== 'nosub') {
-          logger.error(`[ddp] Unsubscribe error: ${err.message}`)
+          logger.error(`[socket] Unsubscribe error: ${err.message}`)
           throw err
         }
       })

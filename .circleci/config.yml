@@ -1,0 +1,55 @@
+# Javascript Node CircleCI 2.0 configuration file
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+version: 2
+
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    # @todo switched to jessie trying to get snapd to install, but it won't :(
+    - image: circleci/node:8.14.0-jessie
+    # - image: circleci/node:8.11
+    # - image: rocketchat/rocket.chat:0.71.1
+      environment:
+        PORT: 3000
+        ADMIN_USERNAME: admin
+        ADMIN_PASS: pass
+        TEST_MODE: true
+        OVERWRITE_SETTING_Show_Setup_Wizard: completed
+      # steps:
+        # - run: meteor npm install
+        # - run: meteor
+
+jobs:
+  build:
+    <<: *defaults
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - yarn-packages-{{ checksum "yarn.lock" }}
+          - v1-dependencies-{{ checksum "package.json" }}
+          - v1-dependencies-
+      
+      - run:
+          command: |
+            sudo apt update && sudo apt install -y snapd
+            sudo snap install rocketchat-server
+
+      - run: yarn install
+
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      
+      - save_cache:          
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+        
+      - run: yarn test
+
+      - run: yarn test:coverage

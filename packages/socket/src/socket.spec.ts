@@ -3,6 +3,7 @@ import * as sinon from 'sinon'
 import { expect } from 'chai'
 import { silence } from '@amazebot/logger'
 import { Socket, isLoginResult } from '.'
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 let socket: Socket
 
@@ -202,6 +203,56 @@ describe('[socket]', () => {
         expect(spy.args.map((c) => c[0].fields.args[0].msg)).to.eql([
           'sub test 1', 'sub test 2', 'sub test 3'
         ])
+      })
+    })
+    describe('.unsubscribe', () => {
+      it('accepts subscription id and removes it', async () => {
+        socket = new Socket()
+        await socket.open()
+        await socket.login()
+        const name = 'stream-room-messages'
+        const room = '__my_messages__'
+        const sub = await socket.subscribe(name, [room, true])
+        await socket.unsubscribe(sub.id)
+          .catch(() => expect(true).to.equal(false))
+        expect(Object.keys(socket.subscriptions)).to.not.contain(sub.id)
+      })
+      it('called from sub is alias to socket', async () => {
+        socket = new Socket()
+        const spy = sinon.spy(socket, 'unsubscribe')
+        await socket.open()
+        await socket.login()
+        const name = 'stream-room-messages'
+        const room = '__my_messages__'
+        const sub = await socket.subscribe(name, [room, true])
+        await sub.unsubscribe()
+        sinon.assert.calledWithExactly(spy, sub.id)
+      })
+      it('ignores unknown subscriptions', async () => {
+        socket = new Socket()
+        await socket.open()
+        await socket.login()
+        await socket.unsubscribe('non-id')
+          .catch(() => expect(true).to.equal(false))
+          .then((result) => expect(typeof result).to.equal('undefined'))
+      })
+    })
+    describe('.ping', () => {
+      it('sends on open', async () => {
+        socket = new Socket({ ping: 20 })
+        const spy = sinon.spy(socket, 'ping')
+        await socket.open()
+        await delay(30)
+        sinon.assert.calledTwice(spy)
+      })
+      it('sets last ping time', async () => {
+        socket = new Socket({ ping: 20 })
+        await socket.open()
+        const before = Date.now()
+        await delay(30)
+        const after = Date.now()
+        expect(socket.lastPing).to.be.gt(before)
+        expect(socket.lastPing).to.be.lt(after)
       })
     })
   })

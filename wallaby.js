@@ -1,7 +1,7 @@
 module.exports = function (wallaby) {
   process.env.NODE_ENV = 'test'
   return {
-    name: 'rocket-control',
+    name: '@amazebot/rocket-control',
     files: [
       'tsconfig.json',
       'package.json',

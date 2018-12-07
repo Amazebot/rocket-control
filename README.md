@@ -3,10 +3,16 @@
 [yarn]: https://yarnpkg.com/
 [rc]: https://rocket.chat/
 [mongo]: https://www.mongodb.com/
+[socket]: https://github.com/Amazebot/rocket-control/tree/master/packages/socket
+[rest]: https://github.com/Amazebot/rocket-control/tree/master/packages/rest
+[rest]: https://github.com/Amazebot/rocket-control/tree/master/packages/sims
 [config]: https://github.com/Amazebot/util/tree/master/packages/config
 
 # 🚀 Rocket Control
-Node.js utilities to manage Rocket.Chat instances and drive integrations
+[Node.js][node] utilities to manage Rocket.Chat instances and drive integrations
+
+<!-- [![CircleCI](https://circleci.com/gh/Amazebot/rocket-control/tree/master.svg?style=shield)](https://circleci.com/gh/Amazebot/rocket-control/tree/master) -->
+<!-- [![codecov](https://codecov.io/gh/Amazebot/rocket-control/branch/master/graph/badge.svg)](https://codecov.io/gh/Amazebot/rocket-control/branch/master) -->
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -17,19 +23,25 @@ Node.js utilities to manage Rocket.Chat instances and drive integrations
 
 ## Meet the family
 
-### 🔌 Rocket Socket (beta)
+### 🔌 [Rocket Socket][socket]
 Communicate with Rocket.Chat Realtime API via websocket (DDP).
+
+[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-socket.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-socket)
+
+### 🛏️ [Rocket Rest][rest]
+Simple handlers for calling Rocket.Chat REST API endpoints.
+
+[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-rest.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-rest)
+
+### 👨‍🎤 [Rocket Sims][sims]
+Populate Rocket.Chat with mock users and messages for testing.
+
+[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-sims.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-sims)
 
 ## In development...
 
-### 🛏️ Rocket Rest
-Simple handlers for calling Rocket.Chat REST API endpoints.
-
 ### 🤖 Rocket Bot
 Consume Rocket.Chat message streams and automate method calls.
-
-### 👨‍🎤 Rocket Sim
-Populate Rocket.Chat with mock users and messages for testing.
 
 ### 💻 Rocket Command
 CLI to manage and provision Rocket.Chat instances and databases.

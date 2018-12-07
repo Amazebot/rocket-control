@@ -1,4 +1,8 @@
 {
-  "extends": "./packages/tsconfig.settings.json",
-  "files": []
+  "extends": "./tsconfig.settings.json",
+  "files": [],
+  "references": [
+    { "path": "packages/socket" },
+    { "path": "packages/rest" }
+  ]
 }

@@ -1,8 +1,8 @@
 {
-  "name": "@amazebot/rocket-socket",
+  "name": "@amazebot/rocket-rest",
   "version": "0.0.0",
-  "description": "Communicate with Rocket.Chat Realtime API via websocket (DDP).",
-  "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/socket",
+  "description": "Simple handlers for calling Rocket.Chat REST API endpoints.",
+  "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/rest",
   "repository": "git@github.com:Amazebot/rocket-control.git",
   "author": "Tim Kinnane <tim.kinnane@amazebot.chat>",
   "license": "MIT",
@@ -25,7 +25,8 @@
     "messaging",
     "CUI",
     "typescript",
-    "DDP"
+    "API",
+    "REST"
   ],
   "publishConfig": {
     "access": "public"
@@ -37,7 +38,7 @@
   "dependencies": {
     "@amazebot/config": "^0.1.0",
     "@amazebot/logger": "^0.1.0",
-    "@types/ws": "^6.0.1",
-    "ws": "^6.1.2"
+    "@amazebot/rocket-socket": "^0.0.0",
+    "axios": "^0.18.0"
   }
 }
