@@ -5,6 +5,7 @@
   "npmClient": "yarn",
   "command": {
     "publish": {
+      "push": false,
       "conventionalCommits": true,
       "message": "chore: publish",
       "ignoreChanges": [

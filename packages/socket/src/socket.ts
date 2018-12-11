@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events'
 import * as WebSocket from 'ws'
 import { createHash } from 'crypto'
 import { logger } from '@amazebot/logger'
@@ -22,7 +21,7 @@ import {
  * Websocket handler class, manages connections and subscriptions.
  * Sends request messages to host, binding their response to async resolution.
  */
-export class Socket extends EventEmitter {
+export class Socket {
   /** Config stores options merged with loaded settings. */
   config: IOptions
   /** Counter for sent messages (any request to socket). */
@@ -35,29 +34,29 @@ export class Socket extends EventEmitter {
   subscriptions: { [id: string]: ISubscription } = {}
   /** Handlers for incoming messages. */
   handlers: IHandler[] = []
+  /** Timeout for waiting for socket to open. */
   openTimeout?: NodeJS.Timer
+  /** Timeout for waiting for socket to re-open. */
   reopenInterval?: NodeJS.Timer
+  /** Timeout between ping. */
   pingTimeout?: NodeJS.Timer
+  /** Web Socket connection instance. */
   connection?: WebSocket
+  /** Session ID from Realtime API. */
   session?: string
+  /** Last used credentials, to avoid re-logging in with same account. */
+  credentials?: Credentials
 
   constructor (
     options?: IOptions | any,
     public resume: ILoginResult | null = null
   ) {
-    super()
     const host = instance.get('url')
     const ssl = host.toLowerCase().startsWith('https') || instance.get('ssl')
     const reopen = 20 * 1000 // 20 second connection attempts
     const ping = 2 * 1000 // 2 second keep-alive ping
     this.config = Object.assign({ host, ssl, reopen, ping }, options)
     this.host = `${hostToWS(this.config.host, this.config.useSsl)}/websocket`
-
-    // Echo call results, emitting ID of DDP call for more specific listeners
-    this.on('message.result', (data: any) => {
-      const { id, result, error } = data
-      this.emit(id, { id, result, error })
-    })
   }
 
   /**
@@ -66,6 +65,7 @@ export class Socket extends EventEmitter {
    * Resumes login if given token.
    */
   open (ms: number = this.config.reopen) {
+    if (this.connected) return Promise.resolve()
     return new Promise(async (resolve, reject) => {
       let connection: WebSocket
       this.lastPing = Date.now()
@@ -82,7 +82,6 @@ export class Socket extends EventEmitter {
       }
       this.connection = connection
       this.connection.onmessage = this.onMessage.bind(this)
-      this.connection.onclose = this.onClose.bind(this)
       this.connection.onopen = this.onOpen.bind(this, resolve)
     })
   }
@@ -96,15 +95,13 @@ export class Socket extends EventEmitter {
     }, 'connected')
     this.session = connected.session
     this.ping().catch((err) => logger.error(`[socket] Unable to ping server: ${err.message}`))
-    this.emit('open')
     if (this.resume) await this.login(this.resume)
     return callback(this.connection)
   }
 
-  /** Emit close event so it can be used for promise resolve in close() */
+  /** Re-open if it wasn't closed purposely */
   onClose (e: any) {
     logger.info(`[socket] Close (${e.code}) ${e.reason}`)
-    this.emit('close', e)
     if (e.code !== 1000) return this.reopen()
   }
 
@@ -112,13 +109,11 @@ export class Socket extends EventEmitter {
    * Find and call matching handlers for incoming message data.
    * Handlers match on collection, id and/or msg attribute in that order.
    * Any matched handlers are removed once called.
-   * All collection events are emitted with their `msg` as the event name.
    */
   onMessage (e: any) {
     const data = (e.data) ? JSON.parse(e.data) : undefined
     // console.log(inspect({ data }, { depth: 4 })) // 👈  very useful for debugging missing responses
     if (!data) return logger.error(`[socket] JSON parse error: ${e.message}`)
-    if (data.collection) this.emit(data.collection, data)
     const handlers = []
     const matcher = (handler: IHandler) => {
       return ((
@@ -144,16 +139,16 @@ export class Socket extends EventEmitter {
   /** Disconnect the DDP from server and clear all subscriptions. */
   async close () {
     if (this.connected) {
+      delete this.lastPing
       await this.unsubscribeAll()
       await new Promise((resolve) => {
-        this.connection!.close(1000, 'disconnect')
-        this.once('close', () => {
+        this.connection!.onclose = (e: any) => {
           delete this.connection
-          this.removeAllListeners()
+          this.onClose(e)
           resolve()
-        })
+        }
+        this.connection!.close(1000, 'disconnect')
       })
-        .catch(() => this.close())
     }
   }
 
@@ -212,7 +207,6 @@ export class Socket extends EventEmitter {
       if (errorMsg) {
         this.handlers.push({ id, msg: errorMsg, callback: reject })
       }
-      this.once('close', reject)
     })
   }
 
@@ -253,11 +247,18 @@ export class Socket extends EventEmitter {
    * Login to server and resubscribe to all subs, resolve with user information.
    * @param credentials User credentials (username/password, oauth or token)
    */
-  async login (credentials?: any) {
-    const params = this.loginParams(credentials)
-    this.resume = (await this.call('login', params) as ILoginResult)
+  async login (credentials?: Credentials) {
+    if (!this.connected) await this.open()
+    credentials = this.loginParams(credentials)
+    if (
+      this.loggedIn
+      && this.resume
+      && JSON.stringify(credentials) === JSON.stringify(this.credentials)
+    ) return this.resume
+    const result = await this.call('login', credentials)
+    this.credentials = credentials
+    this.resume = (result as ILoginResult)
     await this.subscribeAll()
-    this.emit('login', this.resume)
     return this.resume
   }
 
@@ -359,3 +360,6 @@ export class Socket extends EventEmitter {
       .then(() => this.subscriptions = {})
   }
 }
+
+/** Socket connection instance can be shared by multiple imports. */
+export const socket = new Socket()

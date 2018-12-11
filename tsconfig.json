@@ -3,6 +3,8 @@
   "files": [],
   "references": [
     { "path": "packages/socket" },
-    { "path": "packages/rest" }
+    { "path": "packages/rest" },
+    { "path": "packages/sims" },
+    { "path": "packages/examples" }
   ]
 }

@@ -4,16 +4,46 @@ import { expect } from 'chai'
 import { silence } from '@amazebot/logger'
 import { Socket, isLoginResult } from '.'
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
 let socket: Socket
+const sim = {
+  id: null,
+  name: 'Socket Sim',
+  username: 'socket-sim',
+  password: 'password',
+  roles: ['user'],
+  email: 'bit-bucket+sim@test.smtp.org',
+  joinDefaultChannels: false,
+  requirePasswordChange: false,
+  sendWelcomeEmail: false,
+  verified: true
+}
+const useSim = async () => {
+  await socket.login()
+  const users = await socket.call('getFullUserData', {
+    username: sim.username,
+    limit: 1
+  })
+  if (users.length) sim.id = users[0]._id
+  else sim.id = await socket.call('insertOrUpdateUser', sim)
+}
 
 describe('[socket]', () => {
   describe('Socket', () => {
     before(() => silence())
-    afterEach(() => {
-      if (socket) return socket.close()
+    beforeEach(async () => {
+      if (!socket || !socket.connected) return
+      await socket.logout()
+      await socket.close()
     })
-    after(() => silence(false))
+    after(async () => {
+      if (sim.id && sim.id !== null) {
+        await socket.login()
+        await socket.call('deleteUser', sim.id)
+      }
+      await socket.logout()
+      await socket.close()
+      silence(false)
+    })
     describe('constructor', () => {
       it('sets host to default websocket host', () => {
         socket = new Socket()
@@ -50,15 +80,13 @@ describe('[socket]', () => {
         expect(sent).to.have.keys(['msg', 'id'])
       })
       it('good async methods resolve with data', async () => {
-        // @todo this is the only method to test a webhook without a login
-        //       should add another server method to for some basic public stats
-        //       e.g. version number, then update test to check attributes resolve
         socket = new Socket()
         await socket.open()
         const data = await socket.send({
-          msg: 'method', method: 'loadLocale', params: ['en-au']
+          msg: 'method',
+          method: 'getServerInfo'
         })
-        expect(data).to.be.a('object')
+        expect(data.result).to.have.property('version')
       })
       it('bad async methods reject with errors', async () => {
         socket = new Socket()
@@ -101,21 +129,44 @@ describe('[socket]', () => {
       it('can use resolved token to resume login', async () => {
         socket = new Socket()
         await socket.open()
-        const result = await socket.login()
+        const resume = await socket.login()
         await socket.close()
         socket.resume = null
         await socket.open()
-        await socket.login(result)
-        const subs = await socket.call('subscriptions/get')
-        expect(subs).to.be.an('array')
+        await socket.login(resume)
+        expect(socket.loggedIn).to.equal(true)
+      })
+      it('same user with consecutive logins does not re-login', async () => {
+        socket = new Socket()
+        const spy = sinon.spy(socket, 'call')
+        await socket.login()
+        sinon.assert.calledWithExactly(spy, 'login', socket.credentials)
+        spy.resetHistory()
+        await socket.login()
+        sinon.assert.notCalled(spy)
+      })
+      it('login with consecutive users overrides session', async () => {
+        socket = new Socket()
+        await useSim()
+        const resumeA = await socket.login()
+        const resumeB = await socket.login({
+          username: sim.username,
+          password: sim.password
+        })
+        expect(resumeA.id).to.not.equal(resumeB.id)
+        expect(resumeB.id).to.equal(sim.id)
+        expect(socket.resume).to.have.property('id', sim.id)
+        const resumeC = await socket.login()
+        expect(resumeC.id).to.equal(resumeA.id)
+        expect(socket.resume).to.have.property('id', resumeA.id)
       })
       it('.open resumes login with existing token', async () => {
         socket = new Socket()
         await socket.open()
+        await socket.login()
         await socket.close()
         await socket.open()
-        const subs = await socket.call('subscriptions/get')
-        expect(subs).to.be.an('array')
+        expect(socket.loggedIn).to.equal(true)
       })
     })
     describe('.logout', () => {
@@ -158,21 +209,6 @@ describe('[socket]', () => {
         const sub = await socket.subscribe(name, [room, true])
           .catch((err) => expect(typeof err).to.equal('undefined'))
         expect(sub).to.include.keys('id', 'name', 'unsubscribe')
-      })
-      it('emits stream events with ID', () => {
-        return new Promise(async (resolve) => {
-          socket = new Socket()
-          await socket.open()
-          await socket.login()
-          const name = 'stream-room-messages'
-          const room = '__my_messages__'
-          await socket.subscribe(name, [room, true])
-          socket.once('stream-room-messages', (data) => {
-            expect(data.msg).to.equal('changed')
-            resolve()
-          })
-          await socket.call('sendMessage', { rid: 'GENERAL', msg: 'testing' })
-        })
       })
       it('handler fires callback with event data', () => {
         return new Promise(async (resolve) => {
@@ -238,6 +274,7 @@ describe('[socket]', () => {
       })
     })
     describe('.ping', () => {
+      beforeEach(() => socket.close())
       it('sends on open', async () => {
         socket = new Socket({ ping: 20 })
         const spy = sinon.spy(socket, 'ping')
@@ -251,8 +288,8 @@ describe('[socket]', () => {
         const before = Date.now()
         await delay(30)
         const after = Date.now()
-        expect(socket.lastPing).to.be.gt(before)
-        expect(socket.lastPing).to.be.lt(after)
+        expect(socket.lastPing).to.be.gte(before)
+        expect(socket.lastPing).to.be.lte(after)
       })
     })
   })

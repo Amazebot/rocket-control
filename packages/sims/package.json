@@ -1,8 +1,8 @@
 {
-  "name": "@amazebot/rocket-socket",
+  "name": "@amazebot/rocket-sims",
   "version": "0.0.0",
-  "description": "Communicate with Rocket.Chat Realtime API via websocket (DDP).",
-  "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/socket",
+  "description": "Populate Rocket.Chat with mock users and messages for testing.",
+  "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/sims",
   "repository": "git@github.com:Amazebot/rocket-control.git",
   "author": "Tim Kinnane <tim.kinnane@amazebot.chat>",
   "license": "MIT",
@@ -25,7 +25,7 @@
     "messaging",
     "CUI",
     "typescript",
-    "DDP"
+    "testing"
   ],
   "publishConfig": {
     "access": "public"
@@ -35,9 +35,10 @@
     "add:local": "yarn add --registry http://localhost:4873"
   },
   "dependencies": {
-    "@amazebot/config": "^0.1.0",
-    "@amazebot/logger": "^0.1.0",
-    "@types/ws": "^6.0.1",
-    "ws": "^6.1.2"
+    "@amazebot/config": "^0.1.1",
+    "@amazebot/logger": "^0.1.1",
+    "@amazebot/rocket-socket": "^0.0.0",
+    "@types/faker": "^4.1.4",
+    "faker": "^4.1.0"
   }
 }

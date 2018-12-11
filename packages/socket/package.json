@@ -35,8 +35,8 @@
     "add:local": "yarn add --registry http://localhost:4873"
   },
   "dependencies": {
-    "@amazebot/config": "^0.1.0",
-    "@amazebot/logger": "^0.1.0",
+    "@amazebot/config": "^0.1.1",
+    "@amazebot/logger": "^0.1.1",
     "@types/ws": "^6.0.1",
     "ws": "^6.1.2"
   }
