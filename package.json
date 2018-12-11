@@ -28,7 +28,7 @@
   "scripts": {
     "ts-node": "ts-node",
     "add:local": "yarn add --registry http://localhost:4873",
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "rimraf './packages/*/node_modules' && lerna bootstrap",
     "pretest": "yarn bootstrap",
     "mocha": "mocha --opts mocha.opts",
     "test": "nyc mocha **/*.spec.ts --opts mocha.opts",

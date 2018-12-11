@@ -2,3 +2,7 @@
 # yarn lockfile v1
 
 
+"@amazebot/logger@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@amazebot/logger/-/logger-0.1.1.tgz#ceab816cd7708e27b4eb6870343630358b04b868"
+  integrity sha512-4cGFeFqlv6Xvpx/GIWM+hrtz9twRGskZXVinBgBr6Yymdo+2Bvvlh9l4Wryj3nwwmNmIdQ6TbhW4MJm/6Qt2PQ==

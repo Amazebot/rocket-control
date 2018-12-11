@@ -10,6 +10,7 @@
   "dependencies": {
     "@amazebot/rocket-rest": "^0.0.0",
     "@amazebot/rocket-sims": "^0.0.0",
-    "@amazebot/rocket-socket": "^0.0.0"
+    "@amazebot/rocket-socket": "^0.0.0",
+    "@amazebot/logger": "^0.1.1"
   }
 }

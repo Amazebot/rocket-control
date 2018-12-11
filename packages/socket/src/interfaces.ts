@@ -91,7 +91,10 @@ export function isLoginPass (params: any): params is ICredentialsPass {
 
 /** User credentials for oath login method  */
 export interface ICredentialsOAuth {
-  oauth: { credentialToken: string, credentialSecret: string }
+  oauth: {
+    credentialToken: string
+    credentialSecret: string
+  }
 }
 
 /** Password login credential type guard */

@@ -1,3 +1,4 @@
+import { logger } from '@amazebot/logger'
 import { socket, Socket, ILoginResult } from '@amazebot/rocket-socket'
 import * as faker from 'faker'
 
@@ -74,10 +75,12 @@ export namespace user {
     resume?: ILoginResult
     socket?: Socket
 
+    /** Create new record of account attributes. */
     constructor (public id: string, public account: IUserAccount) {
       records[id] = this
     }
 
+    /** Login using known credentials if they exist. */
     async login () {
       this.socket = new Socket()
       await socket.open()
@@ -119,7 +122,7 @@ export namespace user {
     return data
   }
 
-  /** Create (and remember) a user account from credentials. */
+  /** Create (and/or remember) a user account from credentials. */
   export async function create (user: NewUser) {
     await socket.login()
     const account = Object.assign({}, accountDefaults, user)
@@ -127,7 +130,13 @@ export namespace user {
     if (!account.name) account.name = account.username
     if (!account.username) account.username = safeName(account.name!)
     if (!account.email) account.email = nullAddress(account.username)
-    const _id = await socket.call('insertOrUpdateUser', account)
+    const existing = await lookup(account.username).catch()
+    const _id = (existing)
+      ? existing._id
+      : await socket.call('insertOrUpdateUser', account)
+    if (existing && typeof user.password === 'undefined') {
+      logger.warning('[sims] Using existing user without setting password, login will fail.')
+    }
     return new Record(_id, account as IUserAccount)
   }
 

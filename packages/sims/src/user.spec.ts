@@ -89,6 +89,11 @@ describe('[sims]', () => {
         const record = await user.create({ name: testy.name })
         expect(record.account).to.have.all.keys(...Object.keys(testy))
       })
+      it('returns existing user if username exists', async () => {
+        const recordA = await user.create({ username: 'original-user' })
+        const recordB = await user.create({ username: 'original-user' })
+        expect(recordA.id).to.equal(recordB.id)
+      })
     })
     describe('.random', () => {
       it('creates a user with random name', async () => {

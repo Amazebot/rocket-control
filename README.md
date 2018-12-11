@@ -5,7 +5,8 @@
 [mongo]: https://www.mongodb.com/
 [socket]: https://github.com/Amazebot/rocket-control/tree/master/packages/socket
 [rest]: https://github.com/Amazebot/rocket-control/tree/master/packages/rest
-[rest]: https://github.com/Amazebot/rocket-control/tree/master/packages/sims
+[sims]: https://github.com/Amazebot/rocket-control/tree/master/packages/sims
+[packages]: https://github.com/Amazebot/rocket-control/tree/master/packages
 [config]: https://github.com/Amazebot/util/tree/master/packages/config
 
 # 🚀 Rocket Control
@@ -23,20 +24,22 @@
 
 ## Meet the family
 
+See the README in each [package path][packages] for further usage instructions.
+
 ### 🔌 [Rocket Socket][socket]
 Communicate with Rocket.Chat Realtime API via websocket (DDP).
 
 [![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-socket.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-socket)
 
-### 🛏️ [Rocket Rest][rest]
-Simple handlers for calling Rocket.Chat REST API endpoints.
-
-[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-rest.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-rest)
-
 ### 👨‍🎤 [Rocket Sims][sims]
 Populate Rocket.Chat with mock users and messages for testing.
 
 [![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-sims.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-sims)
+
+### 🛏️ [Rocket Rest][rest]
+Simple helpers for calling Rocket.Chat REST API endpoints.
+
+[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-rest.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-rest)
 
 ## In development...
 
@@ -46,27 +49,27 @@ Consume Rocket.Chat message streams and automate method calls.
 ### 💻 Rocket Command
 CLI to manage and provision Rocket.Chat instances and databases.
 
-### 📓 Rocket Logger
-Basic log handling with overrides for use within other modules.
-
 ---
 
-## Get Started
+### Config
 
-[Node.js][node] is required, recommended with [Yarn][yarn] as a package manager.
+Environment settings for instance and credentials to log in to Rocket.Chat.
+Required by all packages:
 
-Environment configs can be loaded from `.env` file or the server environment.
-All configs used by Rocket Control packages use the `RC_` prefix.
-e.g. for the default user. create a `.env` file with the following:
+| Env var                | Description                                         |
+| ---------------------- | ----------------------------------------------------|
+| `RC_URL`               | URL of the Rocket.Chat to connect to                |
+| `RC_SSL`               | Force connection to use SSL (default false)         |
+| `RC_USERNAME`          | Username for account login                          |
+| `RC_PASSWORD`          | Password for account login                          |
+| `RC_AUTH`              | Set to 'ldap' to enable LDAP login                  |
 
-```
-RC_USER="admin"
-RC_PASS="pass"
-```
+The default URL is `localhost:3000` and username `admin` password `pass`.
 
-See the README in each of the [package paths](https://github.com/Amazebot/rocket-control/tree/master/packages) for further usage instructions.
+These can also be set via `.env` file or added to package.json in an `rcConfig`
+attribute, using *camelCase* for property names instead of *ENV_FORMAT*.
 
-For more detail on how config is loaded, see the config utility [README][config].
+See the [`@amazebot/config` README][config] for more info on defining configs.
 
 ## Development
 
@@ -102,4 +105,3 @@ export OVERWRITE_SETTING_Show_Setup_Wizard=completed
 - [ ] Add CircleCI
 - [ ] Add CodeCov
 - [ ] Add Greenkeeper
-- [ ] Generate changelog
