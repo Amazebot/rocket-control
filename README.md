@@ -8,6 +8,8 @@
 [sims]: https://github.com/Amazebot/rocket-control/tree/master/packages/sims
 [packages]: https://github.com/Amazebot/rocket-control/tree/master/packages
 [config]: https://github.com/Amazebot/util/tree/master/packages/config
+[configA]: https://github.com/Amazebot/rocket-control#config
+[examples]: https://github.com/Amazebot/rocket-control/tree/master/packages/examples/src
 
 # 🚀 Rocket Control
 [Node.js][node] utilities to manage Rocket.Chat instances and drive integrations
@@ -31,15 +33,15 @@ Communicate with Rocket.Chat Realtime API via websocket (DDP).
 
 [![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-socket.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-socket)
 
-### 👨‍🎤 [Rocket Sims][sims]
-Populate Rocket.Chat with mock users and messages for testing.
-
-[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-sims.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-sims)
-
 ### 🛏️ [Rocket Rest][rest]
 Simple helpers for calling Rocket.Chat REST API endpoints.
 
 [![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-rest.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-rest)
+
+### 👨‍🎤 [Rocket Sims][sims]
+Populate Rocket.Chat with mock users and messages for testing.
+
+[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-sims.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-sims)
 
 ## In development...
 
@@ -49,9 +51,17 @@ Consume Rocket.Chat message streams and automate method calls.
 ### 💻 Rocket Command
 CLI to manage and provision Rocket.Chat instances and databases.
 
----
+## Examples
 
-### Config
+[See examples][examples] that combine usage of these packages. After you've
+read through [the config][configA] and have a Rocket.Chat instance to test with,
+you can run the examples from source, for example:
+
+```
+yarn ts-node packages/examples/src/bot-mentions
+```
+
+## Config
 
 Environment settings for instance and credentials to log in to Rocket.Chat.
 Required by all packages:
