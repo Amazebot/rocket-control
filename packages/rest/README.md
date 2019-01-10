@@ -5,11 +5,12 @@
 
 # 🛏️ Rocket Rest
 Simple helpers for calling Rocket.Chat REST API endpoints.
+
 ---
 
 ### Usage
 
-See the main [`rocket-control` README][control] for general configuration.
+See the main [Rocket Control README][control] for general configuration.
 
 See [Rocket.Chat's REST API docs][rest-docs] for specific endpoint requirements.
 
@@ -67,11 +68,11 @@ Property contains a boolean of the login status.
 
 Make a request to your Rocket.Chat instance API.
 
-- **Endpoint** appended to the client URL, with `/api/v1` included.
-- **Method** can be `'POST' | 'GET' | 'PUT' | 'DELETE'`
-- **Data** can be an object to post or convert to query params for get requests.
-- **Auth** is a boolean to set if the endpoint requires auth (default true).
-- **Ignore** optional RegExp for expected error messages to prevent throwing.
+**Endpoint** appended to the client URL, with `/api/v1` included.
+**Method** can be `'POST' | 'GET' | 'PUT' | 'DELETE'`
+**Data** can be an object to post or convert to query params for get requests.
+**Auth** is a boolean to set if the endpoint requires auth (default true).
+**Ignore** optional RegExp for expected error messages to prevent throwing.
 
 ```ts
 // basic server info does not require auth
@@ -85,18 +86,18 @@ const users = await API.request('GET', 'users.list', {
 })
 ```
 
-#### `.get(endpoint[, data, auth, ignore])
+#### `.get(endpoint[, data, auth, ignore])`
 
 Proxy for `.request('GET', ...arguments)`
 
-#### `.post(endpoint[, data, auth, ignore])
+#### `.post(endpoint[, data, auth, ignore])`
 
 Proxy for `.request('POST', ...arguments)`
 
-#### `.put(endpoint[, data, auth, ignore])
+#### `.put(endpoint[, data, auth, ignore])`
 
 Proxy for `.request('PUT', ...arguments)`
 
-#### `.del(endpoint[, data, auth, ignore])
+#### `.del(endpoint[, data, auth, ignore])`
 
 Proxy for `.request('DELETE', ...arguments)`
