@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosResponse, AxiosInstance } from 'axios'
 import { logger } from '@amazebot/logger'
 import {
   ILoginResult,
@@ -16,34 +16,44 @@ export let currentLogin: {
   result: ILoginResult
 } | null = null
 
+/** Axios client, populated as required */
+let _client: AxiosInstance
+
+/** Creates and/or returns Axios client, will be re-created if URL given. */
+export function client (host?: string) {
+  let url = (host) ? host : instance.get('url').toLowerCase()
+
+  // Prepend protocol and hard code endpoint prefix
+  const protocol = instance.get('ssl') ? 'https://' : 'http://'
+  if (url.indexOf('http') === -1) url = url.replace(/^(\/\/)?/, protocol)
+  url = url + '/api/v1/'
+
+  // Return existing client if URL hasn't changed
+  if (typeof _client !== 'undefined' && url === _client.defaults.baseURL) {
+    return _client
+  }
+
+  // Create and return client
+  _client = axios.create({
+    baseURL: url,
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return _client
+}
+
 /** Check for existing login */
 export const loggedIn = () => (currentLogin !== null)
 
-/**
- * Prepend protocol (or put back if removed from env settings for driver)
- * Hard code endpoint prefix, because all syntax depends on this version
- */
-let url = instance.get('url').toLowerCase()
-const protocol = instance.get('ssl') ? 'https://' : 'http://'
-if (url.indexOf('http') === -1) url = url.replace(/^(\/\/)?/, protocol)
-url = url + '/api/v1/'
-
-/** Initialize client */
-const client = axios.create({
-  baseURL: url,
-  headers: { 'Content-Type': 'application/json' }
-})
-
 /** Populate auth headers (from response data on login) */
 export function setAuth (authData: {authToken: string, userId: string}) {
-  client.defaults.headers.common['X-Auth-Token'] = authData.authToken
-  client.defaults.headers.common['X-User-Id'] = authData.userId
+  client().defaults.headers.common['X-Auth-Token'] = authData.authToken
+  client().defaults.headers.common['X-User-Id'] = authData.userId
 }
 
 /** Clear headers so they can't be used without logging in again */
 export function clearHeaders () {
-  delete client.defaults.headers.common['X-Auth-Token']
-  delete client.defaults.headers.common['X-User-Id']
+  delete client().defaults.headers.common['X-Auth-Token']
+  delete client().defaults.headers.common['X-User-Id']
 }
 
 /** Check result data for success, allowing override to ignore some errors */
@@ -77,11 +87,11 @@ export async function request (
     if (auth && !loggedIn()) await login()
     let result: AxiosResponse
     switch (method) {
-      case 'GET': result = await client.get(endpoint, { params: data }); break
-      case 'PUT': result = await client.put(endpoint, data); break
-      case 'DELETE': result = await client.delete(endpoint, { data }); break
+      case 'GET': result = await client().get(endpoint, { params: data }); break
+      case 'PUT': result = await client().put(endpoint, data); break
+      case 'DELETE': result = await client().delete(endpoint, { data }); break
       default:
-      case 'POST': result = await client.post(endpoint, data); break
+      case 'POST': result = await client().post(endpoint, data); break
     }
     if (!result) throw new Error(`API ${method} ${endpoint} result undefined`)
     if (!success(result, ignore)) throw result
@@ -93,14 +103,14 @@ export async function request (
   }
 }
 
-/** Do a POST request to an API endpoint. */
-export const post: IRequest = (endpoint, data, auth, ignore) => {
-  return request('POST', endpoint, data, auth, ignore)
-}
-
 /** Do a GET request to an API endpoint. */
 export const get: IRequest = (endpoint, data, auth, ignore) => {
   return request('GET', endpoint, data, auth, ignore)
+}
+
+/** Do a POST request to an API endpoint. */
+export const post: IRequest = (endpoint, data, auth, ignore) => {
+  return request('POST', endpoint, data, auth, ignore)
 }
 
 /** Do a PUT request to an API endpoint. */

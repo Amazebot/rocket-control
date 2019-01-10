@@ -5,6 +5,7 @@ import { Socket } from '@amazebot/rocket-socket'
 import { user } from '@amazebot/rocket-sims'
 import { IUser } from './interfaces'
 import * as api from './api'
+import { instance } from './config'
 
 let sim: user.Record // Mock user
 let simAccount: user.IUserAccount
@@ -99,6 +100,20 @@ describe('api', () => {
       }, true)
       const usernames = result.users.map((user: IUser) => user.username)
       expect(usernames).to.include(simAccount.username)
+    })
+  })
+  describe('.client', () => {
+    it('returns with different server after config update', async () => {
+      const defaultURL = api.client().defaults.baseURL
+      instance.set('url', 'https://open.rocket.chat')
+      const updatedURL = api.client().defaults.baseURL
+      expect(defaultURL).to.not.equal(updatedURL)
+      api.client().defaults.baseURL = defaultURL
+      instance.reset()
+    })
+    it('accepts a new host and assigns URL for API', () => {
+      const url = api.client('https://open.rocket.chat').defaults.baseURL
+      expect(url).to.equal('https://open.rocket.chat/api/v1/')
     })
   })
 })
