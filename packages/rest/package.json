@@ -1,6 +1,6 @@
 {
   "name": "@amazebot/rocket-rest",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Simple handlers for calling Rocket.Chat REST API endpoints.",
   "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/rest",
   "repository": "git@github.com:Amazebot/rocket-control.git",

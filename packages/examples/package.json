@@ -1,6 +1,6 @@
 {
   "name": "examples",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Scripts demonstrating usage of rocket-control packages.",
   "main": "lib/index.js",
   "repository": "git@github.com:Amazebot/rocket-control.git",
@@ -9,7 +9,7 @@
   "private": true,
   "dependencies": {
     "@amazebot/logger": "^0.1.1",
-    "@amazebot/rocket-rest": "^0.0.1",
+    "@amazebot/rocket-rest": "^0.1.0",
     "@amazebot/rocket-sims": "^0.0.1",
     "@amazebot/rocket-socket": "^0.0.1"
   }
