@@ -1,4 +1,5 @@
 [control]: https://github.com/Amazebot/rocket-control
+[config]: https://github.com/Amazebot/rocket-control#config
 [mentions]: https://github.com/Amazebot/rocket-control/tree/master/packages/examples/src/bot-mentions.ts
 
 # 🔌 Rocket Socket
@@ -20,7 +21,7 @@ include `host` *string* and `useSsl` *boolean*.
 
 Creates a websocket handler instance to manage the connection with Rocket.Chat.
 
-```
+```ts
 import { Socket } from '@amazebot/rocket-socket'
 const socket = new Socket()
 ```
@@ -31,7 +32,7 @@ Opens connection with Rocket.Chat. Returns promise.
 
 Accepts option number of ms to attempt re-opening.
 
-```
+```ts
 const socket = new Socket()
 await socket.open()
 await socket.close()
