@@ -18,7 +18,7 @@ the console.
 
 Get user data for existing users.
 
-```
+```ts
 import { user } from '@amazebot/rocket-sims'
 user.lookup('admin')
   .then((data) => console.log(data))
@@ -28,7 +28,7 @@ user.lookup('admin')
 
 Register new user from given attributes and defaults.
 
-```
+```ts
 import { user } from '@amazebot/rocket-sims'
 async function registerSims {
   const u1 = await user.create({ username: 'sim1' })
@@ -59,10 +59,10 @@ Create methods returns a user *record* containing:
 Login returns a websocket instance for the logged in user to make subsequent
 server method calls and subscriptions. e.g:
 
-```
+```ts
 u1 = await user.create({ username: 'sim1' })
 ws1 = await u1.login()
-await ws1.call('joinRoom', 'general)
+await ws1.call('joinRoom', 'general')
 ```
 
 #### `.random()`

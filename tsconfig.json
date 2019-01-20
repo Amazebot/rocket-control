@@ -5,6 +5,7 @@
     { "path": "packages/socket" },
     { "path": "packages/rest" },
     { "path": "packages/sims" },
+    { "path": "packages/bot" },
     { "path": "packages/examples" }
   ]
 }
