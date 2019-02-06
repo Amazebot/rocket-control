@@ -17,32 +17,35 @@ const sim = {
   sendWelcomeEmail: false,
   verified: true
 }
-const useSim = async () => {
+async function useSim () {
   await socket.login()
   const users = await socket.call('getFullUserData', {
     username: sim.username,
     limit: 1
-  })
+  }).catch()
   if (users.length) sim.id = users[0]._id
   else sim.id = await socket.call('insertOrUpdateUser', sim)
+}
+async function removeSim () {
+  await socket.login()
+  const users = await socket.call('getFullUserData', {
+    username: sim.username,
+    limit: 1
+  }).catch()
+  if (users.length) await socket.call('deleteUser', users[0]._id)
 }
 
 describe('[socket]', () => {
   describe('Socket', () => {
     before(() => silence())
+    after(async () => {
+      silence(false)
+      await removeSim()
+    })
     beforeEach(async () => {
       if (!socket || !socket.connected) return
       await socket.logout()
       await socket.close()
-    })
-    after(async () => {
-      if (sim.id && sim.id !== null) {
-        await socket.login()
-        await socket.call('deleteUser', sim.id)
-      }
-      await socket.logout()
-      await socket.close()
-      silence(false)
     })
     describe('constructor', () => {
       it('sets host to default websocket host', () => {
@@ -109,6 +112,17 @@ describe('[socket]', () => {
         const result = await socket.login()
           .catch((err) => expect(typeof err).to.equal('undefined'))
         expect(isLoginResult(result)).to.equal(true)
+      })
+      it('login result contains name', async () => {
+        socket = new Socket()
+        await socket.open()
+        await useSim()
+        const result = await socket.login({
+          username: sim.username,
+          password: sim.password
+        })
+          .catch((err) => expect(typeof err).to.equal('undefined'))
+        expect(result).to.have.property('username', sim.username)
       })
       it('rejects with unknown user', async () => {
         socket = new Socket()

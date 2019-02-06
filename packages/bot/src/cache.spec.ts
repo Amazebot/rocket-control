@@ -7,14 +7,15 @@ import { Socket } from '@amazebot/rocket-socket'
 
 // Instance method variance for testing cache
 const mockSocket = sinon.createStubInstance(Socket)
-mockSocket.call.withArgs('methodOne').onCall(0).resolves({ result: 'foo' })
-mockSocket.call.withArgs('methodOne').onCall(1).resolves({ result: 'bar' })
+mockSocket.call.withArgs('methodOne', 'key1').onCall(0).resolves({ result: 'foo' })
+mockSocket.call.withArgs('methodOne', 'key1').onCall(1).resolves({ result: 'bar' })
 mockSocket.call.withArgs('methodTwo', 'key1').resolves({ result: 'value1' })
 mockSocket.call.withArgs('methodTwo', 'key2').resolves({ result: 'value2' })
 
 silence() // suppress log during tests (disable this while developing tests)
 
 describe('cache', () => {
+  beforeEach(() => mockSocket.call.resetHistory())
   describe('.use', () => {
     it('calls apply to instance', async () => {
       const cache = new Cache()
@@ -45,16 +46,11 @@ describe('cache', () => {
         .then(() => { throw new Error('was not supposed to succeed') })
         .catch((e) => { expect(e).to.be.instanceof(Error) })
     })
-    it('returns a promise', () => {
-      const cache = new Cache()
-      cache.use(mockSocket)
-      expect(cache.call('methodOne', 'key1').then).to.be.a('function')
-    })
     it('calls the method with the key', () => {
       const cache = new Cache()
       cache.use(mockSocket)
       return cache.call('methodTwo', 'key1').then((result) => {
-        expect(result).to.equal('value1')
+        expect(result).to.eql({ result: 'value1' })
       })
     })
     it('only calls the method once', async () => {
@@ -130,7 +126,7 @@ describe('cache', () => {
       await cache.call('methodTwo', 'key2')
       cache.reset('methodTwo', 'key1')
       const result = cache.get('methodTwo', 'key2')
-      expect(result).to.equal('value2')
+      expect(result).to.eql({ result: 'value2' })
     })
     it('without key, removes all results for method', async () => {
       const cache = new Cache()

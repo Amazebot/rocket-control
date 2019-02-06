@@ -71,6 +71,15 @@ export interface ICredentials {
   ldapOptions?: object
 }
 
+/** Basic username/password credential type guard */
+export function isLoginBasic (params: any): params is ICredentials {
+  return (
+    typeof params !== 'undefined' &&
+    typeof params.username !== 'undefined' &&
+    typeof params.password !== 'undefined'
+  )
+}
+
 /** User credentials for password login method */
 export interface ICredentialsPass {
   user: { username: string }
@@ -107,15 +116,13 @@ export function isLoginOAuth (params: any): params is ICredentialsOAuth {
   )
 }
 
-/**
- * Response from login method (called by websocket)
- * @todo make test to inspect websocket login result interface
- */
+/** Response from login method (called by websocket) */
 export interface ILoginResult {
   id: string, // userId
   token: string,
   tokenExpires?: { '$date': number },
-  type: string
+  type: string,
+  username?: string // added manually from credentials
 }
 
 /** Password login credential type guard */

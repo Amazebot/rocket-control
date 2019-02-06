@@ -22,6 +22,16 @@ export const config = new Config({
     description: 'Stream room or collection for subscription parameters',
     default: '__my_messages__'
   },
+  'user-cache-size': {
+    type: 'number',
+    description: 'Amount of user lookups to keep in cache (0 is infinite)',
+    default: 99
+  },
+  'user-cache-age': {
+    type: 'number',
+    description: 'Milliseconds to keep user lookup in cache (default 10 min)',
+    default: 1000 * 60 * 10
+  },
   'room-cache-size': {
     type: 'number',
     description: 'Amount of room lookups to keep in cache (0 is infinite)',
@@ -29,7 +39,7 @@ export const config = new Config({
   },
   'room-cache-age': {
     type: 'number',
-    description: 'Milliseconds to keep room lookups in cache',
+    description: 'Milliseconds to keep room lookup in cache (default 1 hour)',
     default: 1000 * 60 * 60
   },
   'dm-cache-size': {
@@ -39,7 +49,7 @@ export const config = new Config({
   },
   'dm-cache-age': {
     type: 'number',
-    description: 'Milliseconds to keep DM room lookups in cache',
+    description: 'Milliseconds to keep DM room lookup in cache (default 1 day)',
     default: 1000 * 60 * 60 * 24
   },
   'ignore-direct': {

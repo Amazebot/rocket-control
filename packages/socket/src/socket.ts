@@ -8,6 +8,7 @@ import {
   IHandler,
   Credentials,
   ILoginResult,
+  isLoginBasic,
   isLoginPass,
   isLoginOAuth,
   isLoginAuthenticated,
@@ -258,6 +259,8 @@ export class Socket {
     const result = await this.call('login', credentials)
     this.credentials = credentials
     this.resume = (result as ILoginResult)
+    if (isLoginBasic(credentials)) this.resume.username = credentials.username
+    else if (isLoginPass(credentials)) this.resume.username = credentials.user.username
     await this.subscribeAll()
     return this.resume
   }
@@ -281,13 +284,15 @@ export class Socket {
       credentials = {
         username: user.get('username'),
         password: user.get('password')
-      }
+      } // populate with defaults
     }
-    return {
-      user: { username: credentials.username },
-      password: {
-        digest: createHash('sha256').update(credentials.password).digest('hex'),
-        algorithm: 'sha-256'
+    if (isLoginBasic(credentials)) {
+      return {
+        user: { username: credentials.username },
+        password: {
+          digest: createHash('sha256').update(credentials.password).digest('hex'),
+          algorithm: 'sha-256'
+        }
       }
     }
   }
@@ -363,3 +368,5 @@ export class Socket {
 
 /** Socket connection instance can be shared by multiple imports. */
 export const socket = new Socket()
+
+export default socket

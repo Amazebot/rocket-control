@@ -143,9 +143,8 @@ export namespace user {
   /** Delete a user by ID (to be called by proxy method on record). */
   export async function deleteUser (id: string) {
     await socket.login()
-    const result = socket.call('deleteUser', id)
+    socket.call('deleteUser', id).catch()
     delete records[id]
-    return result
   }
 
   /** Delete a user by username if they exist. */
@@ -176,3 +175,5 @@ export namespace user {
     for (let id in records) await deleteUser(id)
   }
 }
+
+export default user

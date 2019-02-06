@@ -39,6 +39,7 @@
     "@amazebot/logger": "^0.1.1",
     "@amazebot/rocket-rest": "^0.1.0",
     "@amazebot/rocket-socket": "^0.0.1",
+    "@amazebot/rocket-sims": "^0.0.1",
     "@types/lru-cache": "^4.1.1",
     "lru-cache": "^5.1.1"
   }

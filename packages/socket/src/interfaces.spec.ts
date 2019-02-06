@@ -1,6 +1,8 @@
 import 'mocha'
 import { expect } from 'chai'
 import {
+  isLoginBasic,
+  ICredentials,
   isLoginPass,
   ICredentialsPass,
   isLoginOAuth,
@@ -13,6 +15,24 @@ import {
 
 describe('[socket]', () => {
   describe('interfaces', () => {
+    describe('.isLoginUsername', () => {
+      it('true for valid basic credentials', () => {
+        const credentials: ICredentials = {
+          username: 'name',
+          password: 'pass'
+        }
+        expect(isLoginBasic(credentials)).to.equal(true)
+      })
+      it('false for undefined', () => {
+        expect(isLoginPass(undefined)).to.equal(false)
+      })
+      it('false for invalid format', () => {
+        expect(isLoginBasic({
+          user: 'username',
+          password: 'password'
+        })).to.equal(false)
+      })
+    })
     describe('.isLoginPass', () => {
       it('true for valid password credentials', () => {
         const credentials: ICredentialsPass = {
@@ -25,11 +45,10 @@ describe('[socket]', () => {
         expect(isLoginPass(undefined)).to.equal(false)
       })
       it('false for invalid format', () => {
-        const credentials: any = {
+        expect(isLoginPass({
           user: 'username',
           password: 'password'
-        }
-        expect(isLoginPass(credentials)).to.equal(false)
+        })).to.equal(false)
       })
     })
     describe('.isLoginOAuth', () => {
@@ -43,10 +62,9 @@ describe('[socket]', () => {
         expect(isLoginOAuth(undefined)).to.equal(false)
       })
       it('false for invalid format', () => {
-        const credentials: any = {
+        expect(isLoginOAuth({
           credentialToken: 'token', credentialSecret: 'secret'
-        }
-        expect(isLoginOAuth(credentials)).to.equal(false)
+        })).to.equal(false)
       })
     })
     describe('.isLoginResult', () => {
@@ -60,10 +78,9 @@ describe('[socket]', () => {
         expect(isLoginResult(undefined)).to.equal(false)
       })
       it('false for invalid format', () => {
-        const credentials: any = {
+        expect(isLoginResult({
           credentialToken: 'token', credentialSecret: 'secret'
-        }
-        expect(isLoginResult(credentials)).to.equal(false)
+        })).to.equal(false)
       })
     })
     describe('.isLoginAuthenticated', () => {
@@ -77,8 +94,7 @@ describe('[socket]', () => {
         expect(isLoginAuthenticated(undefined)).to.equal(false)
       })
       it('false for invalid format', () => {
-        const credentials: any = 'resume'
-        expect(isLoginAuthenticated(credentials)).to.equal(false)
+        expect(isLoginAuthenticated('resume')).to.equal(false)
       })
     })
   })

@@ -7,8 +7,36 @@ import {
   IMessageCallback,
   IMessageFilters,
   IMessage,
-  IMessageMeta
+  IMessageMeta,
+  IMessageReceipt
 } from './interfaces'
+
+/** Use class/interface merging for implicit properties. */
+export interface Message extends IMessage {}
+
+/** Rocket.Chat message class. */
+export class Message implements IMessage {
+  /**
+   * Create message instance.
+   * @param content Accepts message text or a preformed message object
+   * @param iId Integration ID for tracing source of automated sends
+   * @param rId Room ID allows overriding existing content property
+   */
+  constructor (content: string | IMessage, iId?: string, rId?: string) {
+    if (typeof content === 'string') this.msg = content
+    else Object.assign(this, content)
+    if (iId) this.bot = { i: iId }
+    if (rId) this.rid = rId
+  }
+  /** Set Room ID and return message */
+  setRoomId (roomId: string) {
+    this.rid = roomId
+    return this
+  }
+}
+
+/** Interface alias for accepted content types to create message/s. */
+export type IMessageContents = string | string[] | IMessage
 
 /**
  * Driver is implemented by bots to provide high-level minimal coding interface
@@ -22,34 +50,45 @@ export class Driver {
   id = config.get('integration-id')
   subscription: ddp.ISubscription | undefined
   joined: string[] = [] // Array of joined room IDs
-  uid?: string
+  uId?: string
+  username?: string
 
   /** Proxy for socket login method, but also joins configured rooms. */
-  async login (credentials: ddp.Credentials) {
-    this.uid = (await ddp.socket.login(credentials)).id
+  async login (credentials?: ddp.Credentials) {
+    const result = await ddp.socket.login(credentials)
+    this.uId = result.id
+    this.username = result.username
+    if (!this.username) {
+      this.username = await this.userById(this.uId)
+        .then((user) => user.username)
+    }
     await this.joinRooms(config.get('join').split(','))
-    return this.uid
+    return this.uId
   }
 
   /** Proxy for socket login method (which also unsubscribes to all). */
   logout () {
-    return ddp.socket.logout().then(() => this.uid = undefined)
+    return ddp.socket.logout().then(() => this.uId = undefined)
   }
 
   /** Setup caches for room lookup method results. */
   setupCache (): void {
     logger.debug('[driver] Setting up method catch')
+    this.cache.create('getUserById', {
+      max: config.get('user-cache-size'),
+      maxAge: config.get('user-cache-age')
+    })
     this.cache.create('getRoomIdByNameOrId', {
-      max: config.get('room-cache-max-size'),
-      maxAge: config.get('room-cache-max-age')
+      max: config.get('room-cache-size'),
+      maxAge: config.get('room-cache-age')
     }),
     this.cache.create('getRoomNameById', {
-      max: config.get('room-cache-max-size'),
-      maxAge: config.get('room-cache-max-age')
+      max: config.get('room-cache-size'),
+      maxAge: config.get('room-cache-age')
     })
     this.cache.create('createDirectMessage', {
-      max: config.get('dm-cache-max-size'),
-      maxAge: config.get('dm-cache-max-age')
+      max: config.get('dm-cache-size'),
+      maxAge: config.get('dm-cache-age')
     })
   }
 
@@ -58,7 +97,7 @@ export class Driver {
     stream: string = config.get('stream-name'),
     room: string = config.get('stream-room')
   ) {
-    if (!this.uid) throw new Error('[driver] Login required before subscription')
+    if (!this.uId) throw new Error('[driver] Login required before subscription')
     return this.socket.subscribe(stream, [room, true], (e) => {
       logger.debug(`[bot] ${stream} event in ${room} collection: ${JSON.stringify(e)}`)
     })
@@ -81,7 +120,7 @@ export class Driver {
         } else {
           const username = (message.u) ? message.u.username : 'unknown'
           if (
-            (message.u && message.u._id === this.uid) ||
+            (message.u && message.u._id === this.uId) ||
             (meta.roomType === 'd' && ignore.direct) ||
             (meta.roomType === 'l' && ignore.livechat) ||
             (typeof message.editedAt !== 'undefined' && ignore.edited)
@@ -143,26 +182,32 @@ export class Driver {
       })
   }
 
+  async userById (id: string) {
+    const result = await this.callMethod('getFullUserData', { id, limit: 1 })
+    if (result.length) return result[0]
+  }
+
   /** Get ID for a room by name (or ID). */
-  getRoomId (name: string): Promise<string> {
-    return this.cacheCall('getRoomIdByNameOrId', name)
+  getRoomId (name: string) {
+    return this.cacheCall('getRoomIdByNameOrId', name) as Promise<string>
   }
 
   /** Get name for a room by ID. */
-  getRoomName (id: string): Promise<string> {
-    return this.cacheCall('getRoomNameById', id)
+  getRoomName (id: string) {
+    return this.cacheCall('getRoomNameById', id) as Promise<string>
   }
 
   /**
    * Get ID for a DM room by its recipient's name.
    * Will create a DM (with the bot) if it doesn't exist already.
    */
-  getDirectMessageRoomId (username: string): Promise<string> {
-    return this.cacheCall('createDirectMessage', username).then((DM) => DM.rid)
+  getDirectMessageRoomId (username: string) {
+    return this.cacheCall('createDirectMessage', username)
+      .then((DM) => DM.rid) as Promise<string>
   }
 
   /** Join the bot into a room by its name or ID */
-  async joinRoom (room: string): Promise<void> {
+  async joinRoom (room: string) {
     let roomId = await this.getRoomId(room)
     let joinedIndex = this.joined.indexOf(roomId)
     if (joinedIndex !== -1) {
@@ -193,60 +238,41 @@ export class Driver {
     return Promise.all(rooms.map((room) => this.leaveRoom(room)))
   }
 
-  /**
-   * Structure message content, optionally addressing to room ID.
-   * Accepts message text string or a structured message object.
-   */
-  export function prepareMessage (
-    content: string | IMessage,
-    roomId?: string
-  ): Message {
-    const message = new Message(content, integrationId)
-    if (roomId) message.setRoomId(roomId)
-    return message
+  /** Structure message content, optionally addressing to room ID. */
+  prepareMessage (content: string | IMessage, roomId?: string): Message {
+    return new Message(content, this.id, roomId)
   }
 
-  /**
-   * Send a prepared message object (with pre-defined room ID).
-   * Usually prepared and called by sendMessageByRoomId or sendMessageByRoom.
-   */
-  export function sendMessage (message: IMessage) {
-    return (asyncCall('sendMessage', message) as Promise<IMessageReceipt>)
+  /** Send a prepared message object (with pre-defined room ID). */
+  sendMessage (message: IMessage) {
+    return (this.asyncCall('sendMessage', message) as Promise<IMessageReceipt>)
   }
 
   /**
    * Prepare and send string/s to specified room ID.
-   * @param content Accepts message text string or array of strings.
+   * @param contents Accepts message text string or array of strings.
    * @param roomId  ID of the target room to use in send.
-   * @todo Returning one or many gets complicated with type checking not allowing
-   *       use of a property because result may be array, when you know it's not.
-   *       Solution would probably be to always return an array, even for single
-   *       send. This would be a breaking change, should hold until major version.
    */
-  export function sendToRoomId (
-    content: string | string[] | IMessage,
-    roomId: string
-  ): Promise<IMessageReceipt[] | IMessageReceipt> {
-    if (!Array.isArray(content)) {
-      return sendMessage(prepareMessage(content, roomId))
+  sendToRoomId (contents: IMessageContents, roomId: string) {
+    let sends: Promise<IMessageReceipt>[] = []
+    if (!Array.isArray(contents)) {
+      sends.push(this.sendMessage(this.prepareMessage(contents, roomId)))
     } else {
-      return Promise.all(content.map((text) => {
-        return sendMessage(prepareMessage(text, roomId))
-      }))
+      sends = contents.map((text) => {
+        return this.sendMessage(this.prepareMessage(text, roomId))
+      })
     }
+    return Promise.all(sends)
   }
 
   /**
    * Prepare and send string/s to specified room name (or ID).
-   * @param content Accepts message text string or array of strings.
+   * @param contents Accepts message text string or array of strings.
    * @param room    A name (or ID) to resolve as ID to use in send.
    */
-  export function sendToRoom (
-    content: string | string[] | IMessage,
-    room: string
-  ): Promise<IMessageReceipt[] | IMessageReceipt> {
-    return getRoomId(room)
-      .then((roomId) => sendToRoomId(content, roomId))
+  sendToRoom (contents: IMessageContents, room: string) {
+    return this.getRoomId(room)
+      .then((roomId) => this.sendToRoomId(contents, roomId))
   }
 
   /**
@@ -254,20 +280,17 @@ export class Driver {
    * @param content   Accepts message text string or array of strings.
    * @param username  Name to create (or get) DM for room ID to use in send.
    */
-  export function sendDirectToUser (
-    content: string | string[] | IMessage,
-    username: string
-  ): Promise<IMessageReceipt[] | IMessageReceipt> {
-    return getDirectMessageRoomId(username)
-      .then((rid) => sendToRoomId(content, rid))
+  sendDirectToUser (content: IMessageContents, username: string) {
+    return this.getDirectMessageRoomId(username)
+      .then((roomId) => this.sendToRoomId(content, roomId))
   }
 
   /**
    * Edit an existing message, replacing any attributes with those provided.
    * The given message object should have the ID of an existing message.
    */
-  export function editMessage (message: IMessage): Promise<IMessage> {
-    return asyncCall('updateMessage', message)
+  editMessage (message: IMessage) {
+    return this.asyncCall('updateMessage', message) as Promise<IMessage>
   }
 
   /**
@@ -275,9 +298,14 @@ export class Driver {
    * @param emoji     Accepts string like `:thumbsup:` to add 👍 reaction
    * @param messageId ID for a previously sent message
    */
-  export function setReaction (emoji: string, messageId: string) {
-    return asyncCall('setReaction', [emoji, messageId])
+  setReaction (emoji: string, messageId: string) {
+    return this.asyncCall('setReaction', [emoji, messageId])
   }
+
+  /** Inform Rocket.Chat the current (bot) or another user is typing. */
+  // userTyping (roomId: string, username?: string) {
+  //   if (!username) username = this.username
+  // }
 }
 
 export const driver = new Driver()
