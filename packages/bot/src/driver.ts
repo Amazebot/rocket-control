@@ -1,6 +1,6 @@
 import { logger } from '@amazebot/logger'
 import * as api from '@amazebot/rocket-rest'
-import * as ddp from '@amazebot/rocket-socket'
+import { Socket, Credentials, ISubscription } from '@amazebot/rocket-socket'
 import { config } from './config'
 import { Cache } from './cache'
 import {
@@ -11,6 +11,15 @@ import {
   IMessageReceipt
 } from './interfaces'
 
+<<<<<<< Updated upstream
+=======
+/** Make sure configs initialised. */
+config.load()
+
+/** Interface alias for accepted content types to create message/s. */
+export type IMessageContents = string | string[] | IMessage
+
+>>>>>>> Stashed changes
 /** Use class/interface merging for implicit properties. */
 export interface Message extends IMessage {}
 
@@ -28,6 +37,7 @@ export class Message implements IMessage {
     if (iId) this.bot = { i: iId }
     if (rId) this.rid = rId
   }
+<<<<<<< Updated upstream
   /** Set Room ID and return message */
   setRoomId (roomId: string) {
     this.rid = roomId
@@ -38,6 +48,10 @@ export class Message implements IMessage {
 /** Interface alias for accepted content types to create message/s. */
 export type IMessageContents = string | string[] | IMessage
 
+=======
+}
+
+>>>>>>> Stashed changes
 /**
  * Driver is implemented by bots to provide high-level minimal coding interface
  * with Rocket.Chat subscriptions and method calls.
@@ -45,30 +59,48 @@ export type IMessageContents = string | string[] | IMessage
 export class Driver {
   logger = logger
   api = api
-  socket = new ddp.Socket()
+  socket = new Socket()
   cache = new Cache(this.socket)
   id = config.get('integration-id')
-  subscription: ddp.ISubscription | undefined
+  subscription: ISubscription | undefined
   joined: string[] = [] // Array of joined room IDs
   uId?: string
   username?: string
 
   /** Proxy for socket login method, but also joins configured rooms. */
+<<<<<<< Updated upstream
   async login (credentials?: ddp.Credentials) {
     const result = await ddp.socket.login(credentials)
     this.uId = result.id
     this.username = result.username
+=======
+  async login (credentials?: Credentials) {
+    await this.socket.login(credentials)
+    this.uId = this.socket.user!.id
+    this.username = this.socket.user!.username
+>>>>>>> Stashed changes
     if (!this.username) {
       this.username = await this.userById(this.uId)
         .then((user) => user.username)
     }
+<<<<<<< Updated upstream
     await this.joinRooms(config.get('join').split(','))
+=======
+    const rooms = (config.get('join'))
+      ? config.get('join').split(',')
+      : []
+    if (rooms.length) await this.joinRooms(config.get('join').split(','))
+>>>>>>> Stashed changes
     return this.uId
   }
 
   /** Proxy for socket login method (which also unsubscribes to all). */
   logout () {
+<<<<<<< Updated upstream
     return ddp.socket.logout().then(() => this.uId = undefined)
+=======
+    return this.socket.logout().then(() => this.uId = undefined)
+>>>>>>> Stashed changes
   }
 
   /** Setup caches for room lookup method results. */

@@ -113,16 +113,28 @@ describe('[socket]', () => {
           .catch((err) => expect(typeof err).to.equal('undefined'))
         expect(isLoginResult(result)).to.equal(true)
       })
+<<<<<<< Updated upstream
       it('login result contains name', async () => {
         socket = new Socket()
         await socket.open()
         await useSim()
         const result = await socket.login({
+=======
+      it('socket keeps username of user', async () => {
+        socket = new Socket()
+        await socket.open()
+        await useSim()
+        await socket.login({
+>>>>>>> Stashed changes
           username: sim.username,
           password: sim.password
         })
           .catch((err) => expect(typeof err).to.equal('undefined'))
+<<<<<<< Updated upstream
         expect(result).to.have.property('username', sim.username)
+=======
+        expect(socket.user).to.have.property('username', sim.username)
+>>>>>>> Stashed changes
       })
       it('rejects with unknown user', async () => {
         socket = new Socket()

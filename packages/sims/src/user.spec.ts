@@ -95,6 +95,20 @@ describe('[sims]', () => {
         expect(recordA.id).to.equal(recordB.id)
       })
     })
+    describe('.sendFromUser', () => {
+      it('sends a message from the created user', async () => {
+        const record = await user.random()
+        const rid = 'GENERAL'
+        const msg = 'sim-send-test'
+        await user.sendFromUser(record.id, { rid, msg })
+        await socket.login()
+        const { messages } = await socket.call('getChannelHistory', {
+          rid, inclusive: true, count: 1
+        })
+        expect(messages[0]).to.have.property('msg', msg)
+        expect(messages[0].u).to.have.property('_id', record.id)
+      })
+    })
     describe('.random', () => {
       it('creates a user with random name', async () => {
         const record = await user.random()

@@ -18,6 +18,15 @@ import {
   instance
 } from '.'
 
+/** Debounce for reconnection on close. */
+export function debounce<F extends (...params: any[]) => void> (fn: F, delay: number) {
+  let timeoutID: NodeJS.Timer | null = null
+  return function (this: any, ...args: any[]) {
+    if (timeoutID) clearTimeout(timeoutID)
+    timeoutID = setTimeout(() => fn.apply(this, args), delay)
+  } as F
+}
+
 /**
  * Websocket handler class, manages connections and subscriptions.
  * Sends request messages to host, binding their response to async resolution.
@@ -47,6 +56,8 @@ export class Socket {
   session?: string
   /** Last used credentials, to avoid re-logging in with same account. */
   credentials?: Credentials
+  /** Keep logged in user. */
+  user?: { id: string, username?: string }
 
   constructor (
     options?: IOptions | any,
@@ -103,7 +114,7 @@ export class Socket {
   /** Re-open if it wasn't closed purposely */
   onClose (e: any) {
     logger.info(`[socket] Close (${e.code}) ${e.reason}`)
-    if (e.code !== 1000) return this.reopen()
+    if (e.code !== 1000) return debounce(this.reopen.bind(this), 100)
   }
 
   /**
@@ -259,8 +270,14 @@ export class Socket {
     const result = await this.call('login', credentials)
     this.credentials = credentials
     this.resume = (result as ILoginResult)
+<<<<<<< Updated upstream
     if (isLoginBasic(credentials)) this.resume.username = credentials.username
     else if (isLoginPass(credentials)) this.resume.username = credentials.user.username
+=======
+    this.user = { id: this.resume.id }
+    if (isLoginBasic(credentials)) this.user.username = credentials.username
+    else if (isLoginPass(credentials)) this.user.username = credentials.user.username
+>>>>>>> Stashed changes
     await this.subscribeAll()
     return this.resume
   }
@@ -300,6 +317,7 @@ export class Socket {
   /** Logout the current User from the server via Socket. */
   logout () {
     this.resume = null
+    if (this.user) delete this.user
     return this.unsubscribeAll()
       .then(() => this.call('logout'))
   }

@@ -1,8 +1,17 @@
 import { logger } from '@amazebot/logger'
-import { socket, Socket, ILoginResult } from '@amazebot/rocket-socket'
+import { socket as _socket, Socket, ILoginResult } from '@amazebot/rocket-socket'
 import * as faker from 'faker'
 
+/** Cut-down interface for basic message sends. */
+interface IMessage { rid: string, msg: string, [key: string]: any }
+
 export namespace user {
+  export let socket: Socket = _socket
+
+  /** Use a given socket (to override default) */
+  export function use (newSocket: Socket) {
+    socket = newSocket
+  }
 
   /** Returned from getFullUserData */
   export interface IUserData {
@@ -91,13 +100,11 @@ export namespace user {
       return this.socket
     }
 
-    async delete () {
-      if (this.socket) {
-        await this.socket.logout()
-        await this.socket.close()
-      }
-      await deleteUser(this.id)
-    }
+    /** Proxy self-deletion via collection method. */
+    delete = () => deleteUser(this.id)
+
+    /** Proxy self-send via collection method. */
+    send = (message: IMessage) => sendFromUser(this.id, message)
   }
 
   /** Keep known and/or created user records. */
@@ -143,6 +150,14 @@ export namespace user {
   /** Delete a user by ID (to be called by proxy method on record). */
   export async function deleteUser (id: string) {
     await socket.login()
+<<<<<<< Updated upstream
+=======
+    const user = records[id]
+    if (user.socket && user.socket!.loggedIn) {
+      await user.socket.logout()
+      await user.socket.close()
+    }
+>>>>>>> Stashed changes
     socket.call('deleteUser', id).catch()
     delete records[id]
   }
@@ -155,12 +170,11 @@ export namespace user {
   }
 
   /** Send a message from a user to a room. */
-  /*
-  export async function sendFromUser (id: string, rid: string, text: string) {
+  export async function sendFromUser (id: string, message: IMessage) {
     const record = records[id]
-    // await socket.login()
+    const userSocket = await record.login()
+    return userSocket.call('sendMessage', message)
   }
-  */
 
   /** Create a random user. */
   export async function random (customData?: INewUser) {
