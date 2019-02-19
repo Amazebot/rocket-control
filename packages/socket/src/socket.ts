@@ -113,8 +113,7 @@ export class Socket {
 
   /** Re-open if it wasn't closed purposely */
   onClose (e: any) {
-    logger.info(`[socket] Close (${e.code}) ${e.reason}`)
-    if (e.code !== 1000) return debounce(this.reopen.bind(this), 100)
+    if (e.code !== 1000) return debounce(this.reopen.bind(this, e.reason), 100)
   }
 
   /**
@@ -165,7 +164,8 @@ export class Socket {
   }
 
   /** Clear connection and try to connect again. */
-  async reopen () {
+  async reopen (reason?: string) {
+    if (reason) logger.debug(`[socket] Reopen due to ${reason}`)
     if (this.openTimeout) return
     await this.close()
     this.openTimeout = setTimeout(async () => {

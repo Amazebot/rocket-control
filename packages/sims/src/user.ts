@@ -105,6 +105,12 @@ export namespace user {
 
     /** Proxy self-send via collection method. */
     send = (message: IMessage) => sendFromUser(this.id, message)
+
+    /** Proxy self-join a room by ID. */
+    join = (rid: string) => joinRoomWithUser(this.id, rid)
+
+    /** Proxy self-leave a room by ID. */
+    leave = (rid: string) => leaveRoomWithUser(this.id, rid)
   }
 
   /** Keep known and/or created user records. */
@@ -171,6 +177,20 @@ export namespace user {
     const record = records[id]
     const userSocket = await record.login()
     return userSocket.call('sendMessage', message)
+  }
+
+  /** Join a user to a room by ID. */
+  export async function joinRoomWithUser (id: string, rid: string) {
+    const record = records[id]
+    const userSocket = await record.login()
+    return userSocket.call('joinRoom', rid)
+  }
+
+  /** Leave a user from a room by ID. */
+  export async function leaveRoomWithUser (id: string, rid: string) {
+    const record = records[id]
+    const userSocket = await record.login()
+    return userSocket.call('leaveRoom', rid)
   }
 
   /** Create a random user. */

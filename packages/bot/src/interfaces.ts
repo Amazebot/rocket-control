@@ -15,7 +15,7 @@ export interface IMessageCallback {
  * @param livechat    Ignore messages in livechat rooms
  * @param edited      Ignore edited messages
  */
-export interface IMessageFilters {
+export interface IMessageIgnoreTypes {
   direct?: boolean
   livechat?: boolean
   edited?: boolean

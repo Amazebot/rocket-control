@@ -1,29 +1,33 @@
 import 'mocha'
 import * as sinon from 'sinon'
 import { expect } from 'chai'
-import { silence } from '@amazebot/logger'
+// import { silence } from '@amazebot/logger'
 import { user, room } from '@amazebot/rocket-sims'
 import { config } from './config'
 import { driver, Message } from './driver'
 import { IMessage } from './interfaces'
 
-silence()
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// silence()
 
 let simUser: user.Record
+let simName: string
 let simChannel: room.Record
-// let simPrivate: room.INewRoom
+let simPrivate: room.Record
 
-async function lastMessage (rid: string, inclusive = true, count = 1) {
+async function lastMessages (rid: string, inclusive = true, count = 1) {
   const args = { rid, inclusive, count }
   const { messages } = await driver.socket.call('getChannelHistory', args)
   return messages as IMessage[]
 }
 
-describe('driver', () => {
+describe.only('driver', () => {
   before(async () => {
     simUser = await user.create({ name: 'driver-test-user', password: 'pass' })
-    simChannel = await room.create({ name: 'driver-test-public' }, false)
-    // simPrivate = await room.create({ name: 'driver-test-private' }, true)
+    simName = simUser.account.username
+    simChannel = await room.create({ name: 'driver-test-public' }, false).catch()
+    simPrivate = await room.create({ name: 'driver-test-private' }, true).catch()
   })
   after(async () => {
     await user.deleteAll()
@@ -73,7 +77,8 @@ describe('driver', () => {
       ])
     })
   })
-  describe.only('.subscribe', () => {
+  describe('.subscribe', () => {
+    beforeEach(() => delay(1000))
     it('resolves with subscription object', async () => {
       await driver.login()
       const subscription = await driver.subscribe()
@@ -85,6 +90,7 @@ describe('driver', () => {
       ])
     })
     it('throws without first logging in', async () => {
+      await driver.logout()
       expect(() => driver.subscribe()).to.throw()
     })
   })
@@ -114,7 +120,12 @@ describe('driver', () => {
       expect(message.msg).to.equal('foo')
     })
     it('returns a message object from an object', () => {
-
+      const message = driver.prepareMessage({
+        msg: 'foo',
+        rid: simChannel.id
+      })
+      expect(message).to.be.instanceOf(Message)
+      expect(message.msg).to.equal('foo')
     })
   })
   describe('.sendMessage', () => {
@@ -124,11 +135,11 @@ describe('driver', () => {
         rid: simChannel.id,
         msg: ':point_down:',
         emoji: ':point_right:',
-        reactions: { ':thumbsup:': { usernames: [simUser.account.username] } },
+        reactions: { ':thumbsup:': { usernames: [simName] } },
         groupable: false
       })
       await driver.sendMessage(message)
-      const last = await lastMessage(simChannel.id)
+      const last = await lastMessages(simChannel.id)
       expect(last[0]).to.have.deep.property('reactions', message.reactions)
       expect(last[0]).to.have.property('emoji', ':point_right:')
       expect(last[0]).to.have.property('msg', ':point_down:')
@@ -145,7 +156,7 @@ describe('driver', () => {
         msg: 'SDK test `prepareMessage` actions',
         attachments
       })
-      const last = await lastMessage(simChannel.id)
+      const last = await lastMessages(simChannel.id)
       expect(last[0].attachments![0].actions).to.eql(attachments[0].actions)
     })
   })
@@ -159,16 +170,16 @@ describe('driver', () => {
         rid: simChannel.id
       })
       await driver.sendMessage(original)
-      const sent = await lastMessage(simChannel.id)
+      const sent = await lastMessages(simChannel.id)
       const update = Object.assign({}, original, {
         _id: sent[0]._id,
         msg: ':point_up:'
       })
       await driver.editMessage(update)
-      const last = await lastMessage(simChannel.id)
+      const last = await lastMessages(simChannel.id)
       expect(last[0]).to.have.property('msg', ':point_up:')
       expect(last[0]).to.have.deep.property('editedBy', {
-        _id: driver.uId, username: simUser.account.username
+        _id: driver.uId, username: simName
       })
     })
   })
@@ -192,176 +203,166 @@ describe('driver', () => {
     before(() => driver.login())
     it('sends string to the given room name', async () => {
       const msg = 'SDK test `sendToRoom`'
-      const result = await driver.sendToRoom(msg, simChannel.name)
-      const last = await lastMessage(simChannel.id)
-      expect(result).to.include.all.keys(['msg', 'rid', '_id'])
+      await driver.sendToRoom(msg, simChannel.name)
+      const last = await lastMessages(simChannel.id)
       expect(last[0].msg).to.equal(msg)
     })
     it('sends array of strings to the given room name', async () => {
       const msgA = 'SDK test `sendToRoom` A'
       const msgB = 'SDK test `sendToRoom` B'
-      const result = await driver.sendToRoom([msgA, msgB], simChannel.name)
-      const last = await lastMessage(simChannel.id, true, 2)
-      expect(result).to.be.an('array')
-      expect(result[0]).to.include.all.keys(['msg', 'rid', '_id'])
-      expect(result[1]).to.include.all.keys(['msg', 'rid', '_id'])
-      expect([last[0].msg, last[1].msg]).to.eql([msgA, msgB])
+      await driver.sendToRoom([msgA, msgB], simChannel.name)
+      const last = await lastMessages(simChannel.id, true, 2)
+      expect([last[1].msg, last[0].msg]).to.eql([msgA, msgB])
     })
   })
-  /** YOU ARE @HERE */
   describe('.sendDirectToUser', () => {
-    before(() => driver.login())
-    it('sends string to the given room name', async () => {
-      await driver.connect()
+    before(async () => {
+      const now = Date.now()
       await driver.login()
-      const result = await driver.sendDirectToUser('SDK test `sendDirectToUser`', mockUser.username)
-      expect(result).to.include.all.keys(['msg', 'rid', '_id'])
+      console.log(now - Date.now())
+    })
+    it('sends string to the given room name', async () => {
+      const msg = 'SDK test `sendDirectToUser`'
+      const directId = driver.socket.user!.id + simUser.id
+      await driver.sendDirectToUser(msg, simName)
+      const last = await lastMessages(directId)
+      expect(last[0].msg).to.equal(msg)
     })
     it('sends array of strings to the given room name', async () => {
-      const result = await driver.sendDirectToUser([
-        'SDK test `sendDirectToUser` A',
-        'SDK test `sendDirectToUser` B'
-      ], mockUser.username)
-      expect(result).to.be.an('array')
-      expect(result[0]).to.include.all.keys(['msg', 'rid', '_id'])
-      expect(result[1]).to.include.all.keys(['msg', 'rid', '_id'])
+      const msgA = 'SDK test `sendDirectToUser` A'
+      const msgB = 'SDK test `sendDirectToUser` B'
+      const directId = driver.socket.user!.id + simUser.id
+      await driver.sendDirectToUser([msgA, msgB], simName)
+      const last = await lastMessages(directId, true, 2)
+      expect([last[1].msg, last[0].msg]).to.eql([msgA, msgB])
     })
   })
   describe('.setReaction', () => {
     before(() => driver.login())
     it('adds emoji reaction to message', async () => {
-      let sent = await driver.sendToRoomId('test reactions', simChannel.id)
-      if (Array.isArray(sent)) sent = sent[0] // see todo on `sendToRoomId`
+      const sent = await simUser.send({
+        msg: 'test reactions',
+        rid: simChannel.id
+      })
       await driver.setReaction(':thumbsup:', sent._id)
-      const last = await lastMessage(simChannel.id)
-      expect(last.reactions).to.have.deep.property(':thumbsup:', {
-        usernames: [ simUser.account.username ]
+      const last = await lastMessages(simChannel.id)
+      expect(last[0].reactions).to.have.deep.property(':thumbsup:', {
+        usernames: [ driver.socket.user!.username ]
       })
     })
     it('removes if used when emoji reaction exists', async () => {
-      const sent = await driver.sendMessage(driver.prepareMessage({
+      const sent = await simUser.send({
         msg: 'test reactions -',
-        reactions: { ':thumbsup:': { usernames: [simUser.account.username] } },
+        reactions: { ':thumbsup:': { usernames: [driver.socket.user!.username] } },
         rid: simChannel.id
-      }))
+      })
       await driver.setReaction(':thumbsup:', sent._id)
-      const last = await lastMessage(simChannel.id)
-      expect(last).to.not.have.property('reactions')
+      const last = await lastMessages(simChannel.id)
+      expect(last[0]).to.not.have.property('reactions')
     })
   })
-  describe('.respondToMessages', () => {
-    before(() => driver.login())
-    beforeEach(() => driver.leaveRooms(['general', simChannel.name]))
-    it('joins rooms if not already joined', async () => {
-      expect(driver.joinedIds).to.have.lengthOf(0)
-      await driver.respondToMessages(() => null, { rooms: ['general', simChannel.name] })
-      expect(driver.joinedIds).to.have.lengthOf(2)
-    })
-    it('ignores messages sent from bot', async () => {
-      const callback = sinon.spy()
-      await driver.respondToMessages(callback)
-      await driver.sendToRoomId('SDK test `respondToMessages`', simChannel.id)
-      sinon.assert.notCalled(callback)
-    })
-    it('ignores messages in un-joined rooms', async () => {
-      const callback = sinon.spy()
-      await driver.respondToMessages(callback, { rooms: ['general'] })
-      await utils.sendFromUser({ text: 'SDK test `respondToMessages` 1' })
-      sinon.assert.notCalled(callback)
+  describe.only('.onMessage', () => {
+    before(async () => {
+      await driver.login()
+      await driver.joinRoom(simChannel.id)
     })
     it('fires callback on messages in joined rooms', async () => {
       const callback = sinon.spy()
-      await driver.respondToMessages(callback, { rooms: [simChannel.name] })
-      await utils.sendFromUser({ text: 'SDK test `respondToMessages` 1' })
+      await driver.onMessage(callback)
+      await simUser.send({
+        msg: 'SDK test `onMessage` 1',
+        rid: simChannel.id
+      })
       sinon.assert.calledOnce(callback)
     })
-    it('by default ignores edited messages', async () => {
+    it('ignores messages sent from bot', async () => {
       const callback = sinon.spy()
-      const sentMessage = await utils.sendFromUser({
-        text: 'SDK test `respondToMessages` sent'
-      })
-      driver.respondToMessages(callback, { rooms: [simChannel.name] })
-      await utils.updateFromUser({
-        roomId: simChannel.id,
-        msgId: sentMessage.message._id,
-        text: 'SDK test `respondToMessages` edited'
-      })
+      await driver.onMessage(callback)
+      await driver.sendToRoomId('SDK test `onMessage`', simChannel.id)
       sinon.assert.notCalled(callback)
     })
-    it('ignores edited messages, after receiving original', async () => {
+    it('by default fires callback on edited messages', async () => {
+      const sent = await simUser.send({
+        msg: 'SDK test `onMessage` sent',
+        rid: simChannel.id
+      })
       const callback = sinon.spy()
-      await driver.respondToMessages(callback, { rooms: [simChannel.name] })
-      const sentMessage = await utils.sendFromUser({
-        text: 'SDK test `respondToMessages` sent'
-      })
-      await utils.updateFromUser({
-        roomId: simChannel.id,
-        msgId: sentMessage.message._id,
-        text: 'SDK test `respondToMessages` edited'
-      })
+      await driver.onMessage(callback)
+      sent.msg = 'SDK test `onMessage` edited'
+      await driver.socket.call('updateMessage', sent)
       sinon.assert.calledOnce(callback)
     })
-    it('fires callback on edited message if configured', async () => {
+    it('ignores edited messages if configured', async () => {
+      const sent = await simUser.send({
+        msg: 'SDK test `onMessage` sent',
+        rid: simChannel.id
+      })
       const callback = sinon.spy()
-      const sentMessage = await utils.sendFromUser({
-        text: 'SDK test `respondToMessages` sent'
-      })
-      await driver.respondToMessages(callback, { edited: true, rooms: [simChannel.name] })
-      await utils.updateFromUser({
-        roomId: simChannel.id,
-        msgId: sentMessage.message._id,
-        text: 'SDK test `respondToMessages` edited'
-      })
-      sinon.assert.calledOnce(callback)
-    })
-    it('by default ignores DMs', async () => {
-      const dmResult = await utils.setupDirectFromUser()
-      const callback = sinon.spy()
-      await driver.respondToMessages(callback, { rooms: [simChannel.name] })
-      await utils.sendFromUser({
-        text: 'SDK test `respondToMessages` DM',
-        roomId: dmResult.room._id
-      })
+      await driver.onMessage(callback, { edited: true })
+      sent.msg = 'SDK test `onMessage` ignore edited'
+      await driver.socket.call('updateMessage', sent)
       sinon.assert.notCalled(callback)
     })
-    it('fires callback on DMs if configured', async () => {
-      const dmResult = await utils.setupDirectFromUser()
+    it('ignores edited messages, after receiving original if configured', async () => {
       const callback = sinon.spy()
-      await driver.respondToMessages(callback, { dm: true, rooms: [simChannel.name] })
-      await utils.sendFromUser({
-        text: 'SDK test `respondToMessages` DM',
-        roomId: dmResult.room._id
+      await driver.onMessage(callback, { edited: true })
+      const sent = await simUser.send({
+        msg: 'SDK test `onMessage` sent',
+        rid: simChannel.id
       })
+      sent.msg = 'SDK test `onMessage` ignore edited'
+      await driver.socket.call('updateMessage', sent)
+      sinon.assert.calledOnce(callback)
+    })
+    it('ignores DMs if configured', async () => {
+      const { rid } = await driver.socket.call('createDirectMessage', simName)
+      const callback = sinon.spy()
+      await driver.onMessage(callback, { direct: true })
+      await simUser.send({ msg: 'SDK test `onMessage` DM', rid })
+      sinon.assert.notCalled(callback)
+    })
+    it('by default fires callback on DMs', async () => {
+      const { rid } = await driver.socket.call('createDirectMessage', simName)
+      const callback = sinon.spy()
+      await driver.onMessage(callback)
+      await simUser.send({ msg: 'SDK test `onMessage` DM', rid })
       sinon.assert.calledOnce(callback)
     })
     it('fires callback on ul (user leave) message types', async () => {
+      await simUser.join(simChannel.id)
       const callback = sinon.spy()
-      await driver.respondToMessages(callback, { rooms: [simChannel.name] })
-      await utils.leaveUser()
+      await driver.onMessage(callback)
+      await simUser.leave(simChannel.id)
       sinon.assert.calledWithMatch(callback, null, sinon.match({ t: 'ul' }))
-      await utils.inviteUser()
     })
-    it('fires callback on au (user added) message types', async () => {
-      await utils.leaveUser()
+    it.only('fires callback on uj (user join) message types', async () => {
+      await simUser.leave(simChannel.id).catch((_) => null) // ignore not in room
       const callback = sinon.spy()
-      await driver.respondToMessages(callback, { rooms: [simChannel.name] })
-      await utils.inviteUser()
+      await driver.onMessage(callback)
+      await simUser.join(simChannel.id)
+      sinon.assert.calledWithMatch(callback, null, sinon.match({ t: 'uj' }))
+    })
+    it.only('fires callback on au (user added) message types', async () => {
+      await simUser.leave(simChannel.id).catch((_) => null) // ignore not in room
+      const callback = sinon.spy()
+      await driver.onMessage(callback)
+      await driver.socket.call('addUsersToRoom', {
+        rid: simChannel.id,
+        users: [simName]
+      })
       sinon.assert.calledWithMatch(callback, null, sinon.match({ t: 'au' }))
     })
     it('appends room name to event meta in channels', async () => {
       const callback = sinon.spy()
-      await driver.respondToMessages(callback, { dm: true, rooms: [simChannel.name] })
-      await utils.sendFromUser({ text: 'SDK test `respondToMessages` DM' })
+      await driver.onMessage(callback)
+      await simUser.send({ msg: 'SDK test `onMessage`', rid: simChannel.id })
       expect(callback.firstCall.args[2].roomName).to.equal(simChannel.name)
     })
     it('room name is undefined in direct messages', async () => {
-      const dmResult = await utils.setupDirectFromUser()
+      const { rid } = await driver.socket.call('createDirectMessage', simName)
       const callback = sinon.spy()
-      await driver.respondToMessages(callback, { dm: true, rooms: [simChannel.name] })
-      await utils.sendFromUser({
-        text: 'SDK test `respondToMessages` DM',
-        roomId: dmResult.room._id
-      })
+      await driver.onMessage(callback, { direct: true })
+      await simUser.send({ msg: 'SDK test `onMessage` DM', rid })
       expect(callback.firstCall.args[2].roomName).to.equal(undefined)
     })
   })
@@ -372,8 +373,8 @@ describe('driver', () => {
       expect(room).to.equal(simChannel.id)
     })
     it('returns the ID for a private room name', async () => {
-      const room = await driver.getRoomId(pName)
-      expect(room).to.equal(pId)
+      const room = await driver.getRoomId(simPrivate.name)
+      expect(room).to.equal(simPrivate.id)
     })
   })
   describe('.getRoomName', () => {
@@ -383,21 +384,21 @@ describe('driver', () => {
       expect(room).to.equal(simChannel.name)
     })
     it('returns the name for a private group by ID', async () => {
-      const room = await driver.getRoomName(pId)
-      expect(room).to.equal(pName)
+      const room = await driver.getRoomName(simPrivate.id)
+      expect(room).to.equal(simPrivate.name)
     })
     it('returns undefined for a DM room', async () => {
-      const dmResult = await utils.setupDirectFromUser()
-      const room = await driver.getRoomName(dmResult.room._id)
+      const { rid } = await driver.socket.call('createDirectMessage', simName)
+      const room = await driver.getRoomName(rid)
       expect(room).to.equal(undefined)
     })
   })
   describe('.joinRooms', () => {
     before(() => driver.login())
     it('joins all the rooms in array, keeping IDs', async () => {
-      driver.joinedIds.splice(0, driver.joinedIds.length) // clear const array
+      driver.joined.splice(0, driver.joined.length) // clear const array
       await driver.joinRooms(['general', simChannel.name])
-      expect(driver.joinedIds).to.have.members(['GENERAL', simChannel.id])
+      expect(driver.joined).to.have.members(['GENERAL', simChannel.id])
     })
   })
 })

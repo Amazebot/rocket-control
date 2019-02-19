@@ -5,7 +5,7 @@ import { config } from './config'
 import { Cache } from './cache'
 import {
   IMessageCallback,
-  IMessageFilters,
+  IMessageIgnoreTypes,
   IMessage,
   IMessageMeta,
   IMessageReceipt
@@ -63,8 +63,8 @@ export class Driver {
     this.uId = this.socket.user!.id
     this.username = this.socket.user!.username
     if (!this.username) {
-      this.username = await this.userById(this.uId)
-        .then((user) => user.username)
+      const { username } = await this.userById(this.uId)
+      this.username = username
     }
     await this.joinRooms(config.get('join').split(','))
     return this.uId
@@ -107,14 +107,18 @@ export class Driver {
     })
   }
 
-  /** Add callback to aggregated message stream (ignoring filtered sources). */
-  async onMessage (callback: IMessageCallback, filters: IMessageFilters = {}) {
+  /**
+   * Add callback to aggregated message stream (ignoring filtered sources).
+   * Always ignores it's own messages other than special type when adding users
+   * to room, to allow triggering on enter callbacks.
+   */
+  async onMessage (callback: IMessageCallback, ignores: IMessageIgnoreTypes = {}) {
     if (!this.subscription) this.subscription = await this.subscribe()
     const ignore = (Object.assign({
       direct: config.get('ignore-direct'),
       livechat: config.get('ignore-livechat'),
       edited: config.get('ignore-edited')
-    }, filters))
+    }, ignores))
     this.subscription.onEvent((e) => {
       try {
         const message: IMessage = e.fields.args[0]
@@ -124,7 +128,7 @@ export class Driver {
         } else {
           const username = (message.u) ? message.u.username : 'unknown'
           if (
-            (message.u && message.u._id === this.uId) ||
+            (message.u && message.u._id === this.uId && message.t !== 'au') ||
             (meta.roomType === 'd' && ignore.direct) ||
             (meta.roomType === 'l' && ignore.livechat) ||
             (typeof message.editedAt !== 'undefined' && ignore.edited)
@@ -301,9 +305,10 @@ export class Driver {
    * Send a reaction to an existing message. Simple proxy for method call.
    * @param emoji     Accepts string like `:thumbsup:` to add 👍 reaction
    * @param messageId ID for a previously sent message
+   * @param shouldReact Sets a reaction state instead of using as toggle
    */
-  setReaction (emoji: string, messageId: string) {
-    return this.asyncCall('setReaction', [emoji, messageId])
+  setReaction (emoji: string, messageId: string, shouldReact?: boolean) {
+    return this.asyncCall('setReaction', emoji, messageId, shouldReact)
   }
 
   /** Inform Rocket.Chat the current (bot) or another user is typing. */
