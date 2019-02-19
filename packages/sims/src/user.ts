@@ -150,14 +150,11 @@ export namespace user {
   /** Delete a user by ID (to be called by proxy method on record). */
   export async function deleteUser (id: string) {
     await socket.login()
-<<<<<<< Updated upstream
-=======
     const user = records[id]
     if (user.socket && user.socket!.loggedIn) {
       await user.socket.logout()
       await user.socket.close()
     }
->>>>>>> Stashed changes
     socket.call('deleteUser', id).catch()
     delete records[id]
   }

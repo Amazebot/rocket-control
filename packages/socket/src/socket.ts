@@ -270,14 +270,9 @@ export class Socket {
     const result = await this.call('login', credentials)
     this.credentials = credentials
     this.resume = (result as ILoginResult)
-<<<<<<< Updated upstream
-    if (isLoginBasic(credentials)) this.resume.username = credentials.username
-    else if (isLoginPass(credentials)) this.resume.username = credentials.user.username
-=======
     this.user = { id: this.resume.id }
     if (isLoginBasic(credentials)) this.user.username = credentials.username
     else if (isLoginPass(credentials)) this.user.username = credentials.user.username
->>>>>>> Stashed changes
     await this.subscribeAll()
     return this.resume
   }
