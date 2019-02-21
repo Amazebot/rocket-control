@@ -1,9 +1,29 @@
 import { logger } from '@amazebot/logger'
-import { socket as _socket, Socket, ILoginResult } from '@amazebot/rocket-socket'
+import { socket as _socket, Socket } from '@amazebot/rocket-socket'
 import * as faker from 'faker'
 
 /** Cut-down interface for basic message sends. */
 interface IMessage { rid: string, msg: string, [key: string]: any }
+
+/** Cut-down interface for sent message receipt. */
+interface IMessageReceipt {
+  _id: string
+  rid: string
+  alias: string
+  msg: string
+  parseUrls: boolean
+  groupable: boolean
+  ts: { '$date': Date }
+  _updatedAt: { '$date': Date }
+  editedAt?: { '$date': Date }
+  u: {
+    _id: string
+    name: string
+    username: string
+    [key: string]: any
+  }
+  [key: string]: any
+}
 
 export namespace user {
   export let socket: Socket = _socket
@@ -81,7 +101,6 @@ export namespace user {
 
   /** User record allows sending from user and self deletion. */
   export class Record {
-    resume?: ILoginResult
     socket?: Socket
 
     /** Create new record of account attributes. */
@@ -89,16 +108,8 @@ export namespace user {
       records[id] = this
     }
 
-    /** Login using known credentials if they exist. */
-    async login () {
-      this.socket = new Socket()
-      await socket.open()
-      const credentials = (this.resume)
-        ? this.resume
-        : { username: this.account.username, password: this.account.password }
-      this.resume = await this.socket.login(credentials)
-      return this.socket
-    }
+    /** Proxy self-login via collection method. */
+    login = () => loginWithUser(this.id)
 
     /** Proxy self-deletion via collection method. */
     delete = () => deleteUser(this.id)
@@ -153,13 +164,24 @@ export namespace user {
     return new Record(_id, account as IUserAccount)
   }
 
+  /** Login with user credentials from record. */
+  export async function loginWithUser (id: string) {
+    const u = records[id]
+    if (!u.socket) u.socket = new Socket()
+    if (u.socket.loggedIn) return u.socket
+    await socket.open()
+    const { username, password } = u.account
+    await socket.login({ username, password })
+    return socket
+  }
+
   /** Delete a user by ID (to be called by proxy method on record). */
   export async function deleteUser (id: string) {
     await socket.login()
-    const user = records[id]
-    if (user.socket && user.socket!.loggedIn) {
-      await user.socket.logout()
-      await user.socket.close()
+    const u = records[id]
+    if (u.socket && u.socket!.loggedIn) {
+      await u.socket.logout()
+      await u.socket.close()
     }
     socket.call('deleteUser', id).catch()
     delete records[id]
@@ -168,15 +190,15 @@ export namespace user {
   /** Delete a user by username if they exist. */
   export async function deleteUsername (username: string) {
     await socket.login()
-    const user = await lookup(username)
-    if (user) await deleteUser(user._id)
+    const u = await lookup(username)
+    if (u) await deleteUser(u._id)
   }
 
   /** Send a message from a user to a room. */
   export async function sendFromUser (id: string, message: IMessage) {
     const record = records[id]
     const userSocket = await record.login()
-    return userSocket.call('sendMessage', message)
+    return userSocket.call('sendMessage', message) as Promise<IMessageReceipt>
   }
 
   /** Join a user to a room by ID. */

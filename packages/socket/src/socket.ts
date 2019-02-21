@@ -123,7 +123,10 @@ export class Socket {
    */
   onMessage (e: any) {
     const data = (e.data) ? JSON.parse(e.data) : undefined
-    // console.log(inspect({ data }, { depth: 4 })) // 👈  very useful for debugging missing responses
+
+    // 👇 toggle comment to enable logging data for debugging missing responses
+    // console.log(require('util').inspect({ data }, { depth: 4 }))
+
     if (!data) return logger.error(`[socket] JSON parse error: ${e.message}`)
     const handlers = []
     const matcher = (handler: IHandler) => {
@@ -241,8 +244,8 @@ export class Socket {
   }
 
   /**
-   * Calls a method on the server and returns a promise resolved
-   * with the result of the method.
+   * Calls a method on the server and returns a promise resolved with the result
+   * if the method had or was meant to have a result (may be undefined).
    * @param method    The name of the method to be called
    * @param params    An array with the parameters to be sent
    */
@@ -252,7 +255,9 @@ export class Socket {
         logger.error(`[socket] Call error: ${err.message}`)
         throw err
       })
-    return (response.result) ? response.result : response
+    return (response.result || response.msg === 'result')
+      ? response.result
+      : response
   }
 
   /**

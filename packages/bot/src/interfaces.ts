@@ -70,10 +70,13 @@ export interface IMessage {
   reactions?: IMessageReaction
   location ?: IMessageLocation
   u?: IUser
-  ts?: { '$date': Date }
+  ts?: IMessageDate
   editedBy?: IUser
-  editedAt?: { '$date': Date }
+  editedAt?: IMessageDate
 }
+
+/** Format of Rocket.Chat internal time attributes. */
+export interface IMessageDate { '$date': Date }
 
 /**
  * Extra details emitted about message in stream events.
@@ -107,10 +110,10 @@ export interface IMessageReceipt {
   msg: string
   parseUrls: boolean
   groupable: boolean
-  ts: string
-  _updatedAt: string
-  editedAt?: string
   u: IUser
+  ts: IMessageDate
+  _updatedAt: IMessageDate
+  editedAt?: IMessageDate
   editedBy?: IUser
   attachments?: IMessageAttachment[]
   reactions?: IMessageReaction

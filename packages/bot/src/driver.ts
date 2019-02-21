@@ -52,7 +52,7 @@ export class Driver {
   socket = new Socket()
   cache = new Cache(this.socket)
   id = config.get('integration-id')
-  subscription: ISubscription | undefined
+  subscriptions: { [key: string]: ISubscription } = {}
   joined: string[] = [] // Array of joined room IDs
   uId?: string
   username?: string
@@ -97,14 +97,17 @@ export class Driver {
   }
 
   /** Subscribe to default "my messages" collection or other as given. */
-  subscribe (
+  async subscribe (
     stream: string = config.get('stream-name'),
     room: string = config.get('stream-room')
   ) {
+    const key = `${stream}:${room}`
+    if (this.subscriptions[key]) return this.subscriptions[key]
     if (!this.uId) throw new Error('[driver] Login required before subscription')
-    return this.socket.subscribe(stream, [room, true], (e) => {
+    this.subscriptions[key] = await this.socket.subscribe(stream, [room, true], (e) => {
       logger.debug(`[bot] ${stream} event in ${room} collection: ${JSON.stringify(e)}`)
     })
+    return this.subscriptions[key]
   }
 
   /**
@@ -113,13 +116,13 @@ export class Driver {
    * to room, to allow triggering on enter callbacks.
    */
   async onMessage (callback: IMessageCallback, ignores: IMessageIgnoreTypes = {}) {
-    if (!this.subscription) this.subscription = await this.subscribe()
+    const subscription = await this.subscribe()
     const ignore = (Object.assign({
       direct: config.get('ignore-direct'),
       livechat: config.get('ignore-livechat'),
       edited: config.get('ignore-edited')
     }, ignores))
-    this.subscription.onEvent((e) => {
+    subscription.onEvent((e) => {
       try {
         const message: IMessage = e.fields.args[0]
         const meta: IMessageMeta = e.fields.args[1] || {}
@@ -253,7 +256,7 @@ export class Driver {
 
   /** Send a prepared message object (with pre-defined room ID). */
   sendMessage (message: IMessage) {
-    return (this.asyncCall('sendMessage', message) as Promise<IMessageReceipt>)
+    return this.asyncCall('sendMessage', message) as Promise<IMessageReceipt>
   }
 
   /**

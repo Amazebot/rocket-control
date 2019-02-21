@@ -1,5 +1,5 @@
 --require ts-node/register
 --recursive
 --reporter list
---timeout 2000
+--timeout 1000
 --exit
