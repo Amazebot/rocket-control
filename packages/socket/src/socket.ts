@@ -8,6 +8,7 @@ import {
   IHandler,
   Credentials,
   ILoginResult,
+  isLoginBasic,
   isLoginPass,
   isLoginOAuth,
   isLoginAuthenticated,
@@ -46,6 +47,8 @@ export class Socket {
   session?: string
   /** Last used credentials, to avoid re-logging in with same account. */
   credentials?: Credentials
+  /** Keep logged in user. */
+  user?: { id: string, username?: string }
 
   constructor (
     options?: IOptions | any,
@@ -153,7 +156,8 @@ export class Socket {
   }
 
   /** Clear connection and try to connect again. */
-  async reopen () {
+  async reopen (reason?: string) {
+    if (reason) logger.debug(`[socket] Reopen due to ${reason}`)
     if (this.openTimeout) return
     await this.close()
     this.openTimeout = setTimeout(async () => {
@@ -229,8 +233,8 @@ export class Socket {
   }
 
   /**
-   * Calls a method on the server and returns a promise resolved
-   * with the result of the method.
+   * Calls a method on the server and returns a promise resolved with the result
+   * if the method had or was meant to have a result (may be undefined).
    * @param method    The name of the method to be called
    * @param params    An array with the parameters to be sent
    */
@@ -240,7 +244,9 @@ export class Socket {
         logger.error(`[socket] Call error: ${err.message}`)
         throw err
       })
-    return (response.result) ? response.result : response
+    return (response.result || response.msg === 'result')
+      ? response.result
+      : response
   }
 
   /**
@@ -258,6 +264,9 @@ export class Socket {
     const result = await this.call('login', credentials)
     this.credentials = credentials
     this.resume = (result as ILoginResult)
+    this.user = { id: this.resume.id }
+    if (isLoginBasic(credentials)) this.user.username = credentials.username
+    else if (isLoginPass(credentials)) this.user.username = credentials.user.username
     await this.subscribeAll()
     return this.resume
   }
@@ -281,13 +290,15 @@ export class Socket {
       credentials = {
         username: user.get('username'),
         password: user.get('password')
-      }
+      } // populate with defaults
     }
-    return {
-      user: { username: credentials.username },
-      password: {
-        digest: createHash('sha256').update(credentials.password).digest('hex'),
-        algorithm: 'sha-256'
+    if (isLoginBasic(credentials)) {
+      return {
+        user: { username: credentials.username },
+        password: {
+          digest: createHash('sha256').update(credentials.password).digest('hex'),
+          algorithm: 'sha-256'
+        }
       }
     }
   }
@@ -295,6 +306,7 @@ export class Socket {
   /** Logout the current User from the server via Socket. */
   logout () {
     this.resume = null
+    if (this.user) delete this.user
     return this.unsubscribeAll()
       .then(() => this.call('logout'))
   }
@@ -363,3 +375,5 @@ export class Socket {
 
 /** Socket connection instance can be shared by multiple imports. */
 export const socket = new Socket()
+
+export default socket
