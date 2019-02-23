@@ -12,6 +12,9 @@
   },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "bin": {
+    "rocket-call": "lib/cli.js"
+  },
   "directories": {
     "lib": "lib"
   },

@@ -93,3 +93,53 @@ Subscribe to any stream of events on the server, passing the stream `name` and `
 The callback function will be called with every emitted event.
 
 Subscribe method returns a subscription object, with the same attributes used to create it, along with an `.id` and `.unsubscribe()` method.
+
+### CLI Usage
+
+Method calls can also be made over DDP manually through the CLI, using a method
+name and optional other parameters. Results will be printed to console. Requires
+the same config as above, with username/password as ENV or command line opts.
+
+#### Locally with `ts-node`
+
+Run pre-compiled locally, using
+
+```sh
+> ts-node src/cli --method getServerInfo
+```
+
+Outputs
+
+```sh
+{ result:
+   { version: '0.73.2',
+...
+```
+
+You can also pass params
+
+```sh
+> ts-node src/cli --method getRoomNameById --params GENERAL
+```
+
+Outputs
+
+```sh
+{ result: 'general' }
+```
+
+#### As a dependency with `rocket-call`
+
+Run the compiled bin when installed as a dependency
+
+```sh
+> node_modules/bin/rocket-call --method getServerInfo
+```
+
+Or use the alias arguments for both method and params
+
+```sh
+> node_modules/bin/rocket-call -m getRoomNameById -p GENERAL
+```
+
+Could work as a global NPM package too.
