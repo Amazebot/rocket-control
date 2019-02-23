@@ -18,6 +18,15 @@ import {
   instance
 } from '.'
 
+/** Debounce for reconnection on close. */
+export function debounce<F extends (...params: any[]) => void> (fn: F, delay: number) {
+  let timeoutID: NodeJS.Timer | null = null
+  return function (this: any, ...args: any[]) {
+    if (timeoutID) clearTimeout(timeoutID)
+    timeoutID = setTimeout(() => fn.apply(this, args), delay)
+  } as F
+}
+
 /**
  * Websocket handler class, manages connections and subscriptions.
  * Sends request messages to host, binding their response to async resolution.
@@ -104,8 +113,7 @@ export class Socket {
 
   /** Re-open if it wasn't closed purposely */
   onClose (e: any) {
-    logger.info(`[socket] Close (${e.code}) ${e.reason}`)
-    if (e.code !== 1000) return this.reopen()
+    if (e.code !== 1000) return debounce(this.reopen.bind(this, e.reason), 100)
   }
 
   /**
@@ -115,7 +123,10 @@ export class Socket {
    */
   onMessage (e: any) {
     const data = (e.data) ? JSON.parse(e.data) : undefined
-    // console.log(inspect({ data }, { depth: 4 })) // 👈  very useful for debugging missing responses
+
+    // 👇 toggle comment to enable logging data for debugging missing responses
+    // console.log(require('util').inspect({ data }, { depth: 4 }))
+
     if (!data) return logger.error(`[socket] JSON parse error: ${e.message}`)
     const handlers = []
     const matcher = (handler: IHandler) => {
