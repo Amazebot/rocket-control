@@ -45,7 +45,7 @@ describe('api', () => {
     afterEach(() => api.logout())
     it('logs in with the default user without arguments', async () => {
       const login = await api.login()
-      expect(login.data.userId).to.equal(socket.resume!.id)
+      expect(login.data.userId).to.equal(socket.user!.id)
     })
     it('ignores consecutive login by same user', async () => {
       const loginA = await api.login()
@@ -69,7 +69,7 @@ describe('api', () => {
     })
     it('stores logged in user result', async () => {
       await api.login()
-      expect(api.currentLogin!.userId).to.equal(socket.resume!.id)
+      expect(api.currentLogin!.userId).to.equal(socket.user!.id)
     })
   })
   describe('.logout', () => {
