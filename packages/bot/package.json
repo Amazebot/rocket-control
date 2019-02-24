@@ -1,0 +1,46 @@
+{
+  "name": "@amazebot/rocket-bot",
+  "version": "0.0.1",
+  "description": "Consume Rocket.Chat message streams and automate method calls.",
+  "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/bot",
+  "repository": "git@github.com:Amazebot/rocket-control.git",
+  "author": "Tim Kinnane <tim.kinnane@amazebot.chat>",
+  "license": "MIT",
+  "engines": {
+    "node": "> 8.0.0",
+    "npm": "> 5.0.0"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "keywords": [
+    "rocket.chat",
+    "chat",
+    "chatops",
+    "messaging",
+    "CUI",
+    "typescript",
+    "chatbot"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "add:local": "yarn add --registry http://localhost:4873"
+  },
+  "dependencies": {
+    "@amazebot/config": "^0.1.1",
+    "@amazebot/logger": "^0.1.1",
+    "@amazebot/rocket-rest": "^0.1.0",
+    "@amazebot/rocket-socket": "^0.0.1",
+    "@amazebot/rocket-sims": "^0.0.1",
+    "@types/lru-cache": "^4.1.1",
+    "lru-cache": "^5.1.1"
+  }
+}
