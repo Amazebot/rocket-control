@@ -95,6 +95,45 @@ describe('[sims]', () => {
         expect(recordA.id).to.equal(recordB.id)
       })
     })
+    describe('.sendFromUser', () => {
+      it('sends a message from the created user', async () => {
+        const record = await user.random()
+        const rid = 'GENERAL'
+        const msg = 'sim-send-test'
+        await user.sendFromUser(record.id, { rid, msg })
+        const { messages } = await socket.call('getChannelHistory', {
+          rid, inclusive: true, count: 1
+        })
+        expect(messages[0]).to.have.property('msg', msg)
+        expect(messages[0].u).to.have.property('_id', record.id)
+      })
+    })
+    describe('.joinRoomWithUser', () => {
+      it('joins the created user to a room', async () => {
+        const record = await user.random()
+        const rid = 'GENERAL'
+        await user.joinRoomWithUser(record.id, rid)
+        const { messages } = await socket.call('getChannelHistory', {
+          rid, inclusive: true, count: 1
+        })
+        expect(messages[0]).to.have.property('t', 'uj')
+        expect(messages[0].u).to.have.property('_id', record.id)
+      })
+    })
+    describe('.leaveRoomWithUser', () => {
+      it('leaves the created user from a room', async () => {
+        const record = await user.random()
+        const rid = 'GENERAL'
+        await user.joinRoomWithUser(record.id, rid)
+        await user.leaveRoomWithUser(record.id, rid)
+        await socket.login()
+        const { messages } = await socket.call('getChannelHistory', {
+          rid, inclusive: true, count: 1
+        })
+        expect(messages[0]).to.have.property('t', 'ul')
+        expect(messages[0].u).to.have.property('_id', record.id)
+      })
+    })
     describe('.random', () => {
       it('creates a user with random name', async () => {
         const record = await user.random()
