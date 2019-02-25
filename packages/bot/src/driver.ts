@@ -25,13 +25,11 @@ export class Message implements IMessage {
   /**
    * Create message instance.
    * @param content Accepts message text or a preformed message object
-   * @param iId Integration ID for tracing source of automated sends
    * @param rId Room ID allows overriding existing content property
    */
-  constructor (content: string | IMessage, iId?: string, rId?: string) {
+  constructor (content: string | IMessage, rId?: string) {
     if (typeof content === 'string') this.msg = content
     else Object.assign(this, content)
-    if (iId) this.bot = { i: iId }
     if (rId) this.rid = rId
   }
 
@@ -51,29 +49,28 @@ export class Driver {
   api = api
   socket = new Socket()
   cache = new Cache(this.socket)
-  id = config.get('integration-id')
   subscriptions: { [key: string]: ISubscription } = {}
   joined: string[] = [] // Array of joined room IDs
-  uId?: string
+  id?: string
   username?: string
 
   /** Proxy for socket login method, but also joins configured rooms. */
   async login (credentials?: Credentials) {
     await this.socket.login(credentials)
-    this.uId = this.socket.user!.id
+    this.id = this.socket.user!.id
     this.username = this.socket.user!.username
     if (!this.username) {
-      const { username } = await this.userById(this.uId)
+      const { username } = await this.userById(this.id)
       this.username = username
     }
     await this.joinRooms(config.get('join').split(','))
-    return this.uId
+    return this.id
   }
 
   /** Proxy for socket login method (which also unsubscribes to all). */
   logout () {
     return (this.socket.loggedIn)
-      ? this.socket.logout().then(() => this.uId = undefined)
+      ? this.socket.logout().then(() => this.id = undefined)
       : Promise.resolve()
   }
 
@@ -105,7 +102,7 @@ export class Driver {
   ) {
     const key = `${stream}:${room}`
     if (this.subscriptions[key]) return this.subscriptions[key]
-    if (!this.uId) throw new Error('[driver] Login required before subscription')
+    if (!this.id) throw new Error('[driver] Login required before subscription')
     this.subscriptions[key] = await this.socket.subscribe(stream, [room, true], (e) => {
       logger.debug(`[bot] ${stream} event in ${room} collection: ${JSON.stringify(e)}`)
     })
@@ -140,7 +137,7 @@ export class Driver {
         } else {
           const username = (message.u) ? message.u.username : 'unknown'
           if (
-            (message.u && message.u._id === this.uId && message.t !== 'au') ||
+            (message.u && message.u._id === this.id && message.t !== 'au') ||
             (meta.roomType === 'd' && ignore.direct) ||
             (meta.roomType === 'l' && ignore.livechat) ||
             (typeof message.editedAt !== 'undefined' && ignore.edited)
@@ -260,7 +257,10 @@ export class Driver {
 
   /** Structure message content, optionally addressing to room ID. */
   prepareMessage (content: string | IMessage, roomId?: string): Message {
-    return new Message(content, this.id, roomId)
+    const integrationId = config.get('integration-id')
+    const message = new Message(content, roomId)
+    message.bot = { i: integrationId }
+    return message
   }
 
   /** Send a prepared message object (with pre-defined room ID). */

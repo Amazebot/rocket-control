@@ -44,7 +44,7 @@ describe('driver', () => {
     })
     it('copies user ID from socket', async () => {
       await driver.login()
-      expect(driver.uId).to.eql(driver.uId)
+      expect(driver.id).to.eql(driver.id)
     })
     it('copies username from socket', async () => {
       await driver.login()
@@ -93,7 +93,7 @@ describe('driver', () => {
       expect(() => driver.subscribe()).to.throw()
     })
   })
-  describe.only('.ignoreSources', () => {
+  describe('.ignoreSources', () => {
     it('returns ignored sources config', async () => {
       config.set('ignore-direct', true)
       config.set('ignore-livechat', true)
@@ -146,10 +146,26 @@ describe('driver', () => {
     it('returns a message object from an object', () => {
       const message = driver.prepareMessage({
         msg: 'foo',
-        rid: simChannel.id
+        rid: '000'
       })
       expect(message).to.be.instanceOf(Message)
       expect(message.msg).to.equal('foo')
+    })
+    it('includes the integration ID from config', () => {
+      process.env.RC_INTEGRATION_ID = 'test'
+      config.load()
+      const message = driver.prepareMessage({
+        msg: 'foo',
+        rid: '000'
+      })
+      expect(message.bot).to.have.property('i', 'test')
+    })
+    it('takes additional room ID param to override content', () => {
+      const message = driver.prepareMessage({
+        msg: 'foo',
+        rid: '000'
+      }, '111')
+      expect(message).to.have.property('rid', '111')
     })
   })
   describe('.sendMessage', () => {
@@ -196,7 +212,7 @@ describe('driver', () => {
       const last = await lastMessages(simChannel.id)
       expect(last[0]).to.have.property('msg', ':point_up:')
       expect(last[0]).to.have.deep.property('editedBy', {
-        _id: driver.uId, username: driver.username
+        _id: driver.id, username: driver.username
       })
       expect(last[0].u).to.have.property('username', simName)
     })
@@ -236,7 +252,7 @@ describe('driver', () => {
     before(() => driver.login())
     it('sends string to the given room name', async () => {
       const msg = 'SDK test `sendDirectToUser`'
-      const directId = driver.uId + simUser.id
+      const directId = driver.id + simUser.id
       await driver.sendDirectToUser(msg, simName)
       const last = await lastMessages(directId)
       expect(last[0].msg).to.equal(msg)
@@ -244,7 +260,7 @@ describe('driver', () => {
     it('sends array of strings to the given room name', async () => {
       const msgA = 'SDK test `sendDirectToUser` A'
       const msgB = 'SDK test `sendDirectToUser` B'
-      const directId = driver.uId + simUser.id
+      const directId = driver.id + simUser.id
       await driver.sendDirectToUser([msgA, msgB], simName)
       const last = await lastMessages(directId, true, 2)
       expect([last[1].msg, last[0].msg]).to.eql([msgA, msgB])
