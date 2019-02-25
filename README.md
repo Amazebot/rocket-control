@@ -6,6 +6,7 @@
 [socket]: https://github.com/Amazebot/rocket-control/tree/master/packages/socket
 [rest]: https://github.com/Amazebot/rocket-control/tree/master/packages/rest
 [sims]: https://github.com/Amazebot/rocket-control/tree/master/packages/sims
+[bot]: https://github.com/Amazebot/rocket-control/tree/master/packages/bot
 [packages]: https://github.com/Amazebot/rocket-control/tree/master/packages
 [config]: https://github.com/Amazebot/util/tree/master/packages/config
 [configA]: https://github.com/Amazebot/rocket-control#config
@@ -43,10 +44,12 @@ Populate Rocket.Chat with mock users and messages for testing.
 
 [![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-sims.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-sims)
 
-## In development...
-
-### 🤖 Rocket Bot
+### 🤖 Rocket Bot[bot]
 Consume Rocket.Chat message streams and automate method calls.
+
+[![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-bot.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-bot)
+
+## Future release...
 
 ### 💻 Rocket Command
 CLI to manage and provision Rocket.Chat instances and databases.
