@@ -30,6 +30,7 @@ describe('driver', () => {
     simChannel = await room.create({ name: 'driver-test-public' }, false).catch()
     simPrivate = await room.create({ name: 'driver-test-private' }, true).catch()
   })
+  beforeEach(() => config.reset())
   after(async () => {
     await user.deleteAll()
     await room.deleteAll()
@@ -50,13 +51,11 @@ describe('driver', () => {
       expect(driver.username).to.eql(driver.username)
     })
     it('calls join room with configured rooms', async () => {
-      config.reset()
       const stub = sinon.stub(driver, 'joinRooms')
       config.set('join', 'foo,bar,baz')
       await driver.login()
       sinon.assert.calledWithExactly(stub, ['foo', 'bar', 'baz'])
       stub.restore()
-      config.reset()
     })
   })
   describe.skip('.logout', () => {
@@ -92,6 +91,31 @@ describe('driver', () => {
     it.skip('throws without first logging in', async () => {
       await driver.logout()
       expect(() => driver.subscribe()).to.throw()
+    })
+  })
+  describe.only('.ignoreSources', () => {
+    it('returns ignored sources config', async () => {
+      config.set('ignore-direct', true)
+      config.set('ignore-livechat', true)
+      config.set('ignore-edited', true)
+      expect(driver.ignoreSources()).to.eql({
+        direct: true,
+        livechat: true,
+        edited: true
+      })
+    })
+    it('toggles values for enabled/disabled sources', () => {
+      config.set('ignore-direct', true)
+      config.set('ignore-livechat', true)
+      config.set('ignore-edited', false)
+      expect(driver.ignoreSources({
+        direct: true,
+        edited: false
+      })).to.eql({
+        direct: false,
+        livechat: true,
+        edited: true
+      })
     })
   })
   describe('.onMessage', () => {
@@ -287,14 +311,14 @@ describe('driver', () => {
         rid: simChannel.id
       })
       const callback = sinon.spy()
-      await driver.onMessage(callback, { edited: true })
+      await driver.onMessage(callback, { edited: false })
       sent.msg = 'SDK test `onMessage` ignore edited'
       await driver.socket.call('updateMessage', sent)
       sinon.assert.notCalled(callback)
     })
     it('ignores edited messages, after receiving original if configured', async () => {
       const callback = sinon.spy()
-      await driver.onMessage(callback, { edited: true })
+      await driver.onMessage(callback, { edited: false })
       const sent = await simUser.send({
         msg: 'SDK test `onMessage` sent',
         rid: simChannel.id
@@ -306,7 +330,7 @@ describe('driver', () => {
     it('ignores DMs if configured', async () => {
       const { rid } = await driver.socket.call('createDirectMessage', simName)
       const callback = sinon.spy()
-      await driver.onMessage(callback, { direct: true })
+      await driver.onMessage(callback, { direct: false })
       await simUser.send({ msg: 'SDK test `onMessage` DM', rid })
       sinon.assert.notCalled(callback)
     })

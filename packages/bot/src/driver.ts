@@ -5,7 +5,7 @@ import { config } from './config'
 import { Cache } from './cache'
 import {
   IMessageCallback,
-  IMessageIgnoreTypes,
+  IMessageSources,
   IMessage,
   IMessageMeta,
   IMessageReceipt
@@ -72,7 +72,9 @@ export class Driver {
 
   /** Proxy for socket login method (which also unsubscribes to all). */
   logout () {
-    return this.socket.logout().then(() => this.uId = undefined)
+    return (this.socket.loggedIn)
+      ? this.socket.logout().then(() => this.uId = undefined)
+      : Promise.resolve()
   }
 
   /** Setup caches for room lookup method results. */
@@ -110,18 +112,25 @@ export class Driver {
     return this.subscriptions[key]
   }
 
-  /**
-   * Add callback to aggregated message stream (ignoring filtered sources).
-   * Always ignores it's own messages other than special type when adding users
-   * to room, to allow triggering on enter callbacks.
-   */
-  async onMessage (callback: IMessageCallback, ignores: IMessageIgnoreTypes = {}) {
-    const subscription = await this.subscribe()
-    const ignore = (Object.assign({
+  /** Get ignored message sources from options and config. */
+  ignoreSources (enabledSources: IMessageSources = {}) {
+    const toggleSources: IMessageSources = {}
+    for (const key in enabledSources) toggleSources[key] = !enabledSources[key]
+    return Object.assign({
       direct: config.get('ignore-direct'),
       livechat: config.get('ignore-livechat'),
       edited: config.get('ignore-edited')
-    }, ignores))
+    }, toggleSources)
+  }
+
+  /**
+   * Add callback to aggregated message stream (ignoring disabled sources).
+   * Always ignores it's own messages other than special type when adding users
+   * to room, to allow triggering on enter callbacks.
+   */
+  async onMessage (callback: IMessageCallback, sources?: IMessageSources) {
+    const subscription = await this.subscribe()
+    const ignore = this.ignoreSources(sources)
     subscription.onEvent((e) => {
       try {
         const message: IMessage = e.fields.args[0]

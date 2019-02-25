@@ -10,15 +10,16 @@ export interface IMessageCallback {
 }
 
 /**
- * Message respond options
- * @param dm          Ignore messages in direct message rooms
- * @param livechat    Ignore messages in livechat rooms
- * @param edited      Ignore edited messages
+ * Enable/disable message stream callbacks for some sources.
+ * @param dm          Respond to messages in direct message rooms
+ * @param livechat    Respond to messages in livechat rooms
+ * @param edited      Respond to edited messages
  */
-export interface IMessageIgnoreTypes {
+export interface IMessageSources {
   direct?: boolean
   livechat?: boolean
   edited?: boolean
+  [key: string]: boolean | undefined
 }
 
 /**
