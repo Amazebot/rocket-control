@@ -44,7 +44,7 @@ Populate Rocket.Chat with mock users and messages for testing.
 
 [![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-sims.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-sims)
 
-### 🤖 Rocket Bot[bot]
+### 🤖 [Rocket Bot][bot]
 Consume Rocket.Chat message streams and automate method calls.
 
 [![npm version](https://badge.fury.io/js/%40amazebot%2Frocket-bot.svg)](https://badge.fury.io/js/%40amazebot%2Frocket-bot)
@@ -90,12 +90,7 @@ Lerna is used to link and publish packages that depend on each other, to streaml
 
 If you'd like to contribute, our priority is ensuring stability with new Rocket.Chat releases and communicating any known incompatibility with prior versions. We welcome enhancements to CI to test against an array of RC version containers - ideally with some persistent visibility for the community.
 
-A note about the **Rocket.Chat JS SDK**. This suite reproduces some features of the official SDK (it was made by the same person) but the SDK is evolving under direction of the core team for a wider variety of use cases. These packages are aimed at providing simple low level pieces in isolation for bespoke usage.
-
-Development requires [Node][node] and [Lerna][lerna] and a local (or non-production remote) instance of [Rocket.Chat][rc].
-
-It's recommended to install [Mongo][mongo] as a service, so the DB is accessible while the Rocket.Chat isn't running.
-> e.g. on OS X `ln -sfv /usr/local/opt/mongodb/*.plist ~/Library/LaunchAgents`
+### Testing [Rocket.Chat][rc]
 
 Clone and run a clean Rocket.Chat install **in a different path**, to make it available for unit tests.
 1. Clone    `git clone https://github.com/RocketChat/Rocket.Chat.git rocketchat-test`
@@ -118,3 +113,7 @@ export OVERWRITE_SETTING_Show_Setup_Wizard=completed
 - [ ] Add CircleCI
 - [ ] Add CodeCov
 - [ ] Add Greenkeeper
+
+### Notes
+
+A note about the **Rocket.Chat JS SDK**. This suite reproduces some features of the official SDK (it was made by the same person) but the SDK is evolving under direction of the core team for a wider variety of use cases. These packages are aimed at providing simple low level pieces in isolation for bespoke usage.
