@@ -1,6 +1,6 @@
 {
   "name": "@amazebot/rocket-sims",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Populate Rocket.Chat with mock users and messages for testing.",
   "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/sims",
   "repository": "git@github.com:Amazebot/rocket-control.git",
@@ -37,7 +37,7 @@
   "dependencies": {
     "@amazebot/config": "^0.1.1",
     "@amazebot/logger": "^0.1.1",
-    "@amazebot/rocket-socket": "^0.0.1",
+    "@amazebot/rocket-socket": "^0.1.0",
     "@types/faker": "^4.1.4",
     "faker": "^4.1.0"
   }

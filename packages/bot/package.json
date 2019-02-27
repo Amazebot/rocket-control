@@ -1,6 +1,6 @@
 {
   "name": "@amazebot/rocket-bot",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Consume Rocket.Chat message streams and automate method calls.",
   "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/bot",
   "repository": "git@github.com:Amazebot/rocket-control.git",
@@ -37,9 +37,9 @@
   "dependencies": {
     "@amazebot/config": "^0.1.1",
     "@amazebot/logger": "^0.1.1",
-    "@amazebot/rocket-rest": "^0.1.0",
-    "@amazebot/rocket-socket": "^0.0.1",
-    "@amazebot/rocket-sims": "^0.0.1",
+    "@amazebot/rocket-rest": "^0.2.0",
+    "@amazebot/rocket-sims": "^0.1.0",
+    "@amazebot/rocket-socket": "^0.1.0",
     "@types/lru-cache": "^4.1.1",
     "lru-cache": "^5.1.1"
   }
