@@ -167,23 +167,21 @@ export namespace user {
   /** Login with user credentials from record. */
   export async function loginWithUser (id: string) {
     const u = records[id]
-    if (!u.socket) u.socket = new Socket()
-    if (u.socket.loggedIn) return u.socket
-    await socket.open()
+    if (u.socket && u.socket.loggedIn) return u.socket
+    u.socket = new Socket()
+    await u.socket.open()
     const { username, password } = u.account
-    await socket.login({ username, password })
-    return socket
+    await u.socket.login({ username, password })
+    return u.socket
   }
 
   /** Delete a user by ID (to be called by proxy method on record). */
   export async function deleteUser (id: string) {
     await socket.login()
     const u = records[id]
-    if (u.socket && u.socket!.loggedIn) {
-      await u.socket.logout()
-      await u.socket.close()
-    }
-    socket.call('deleteUser', id).catch()
+    const found = await lookup(u.account.username)
+    if (found) await socket.call('deleteUser', found._id)
+    if (u.socket && u.socket.loggedIn) await u.socket.close()
     delete records[id]
   }
 

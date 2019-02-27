@@ -15,14 +15,22 @@ const testy = {
   verified: true
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 describe('[sims]', () => {
   before(async () => {
     await socket.login()
+    await socket.call('authorization:saveRole', { name: 'robot' })
+    await socket.call('authorization:addUserToRole', 'robot', socket.user!.username)
     silence()
   })
+  beforeEach(async () => {
+    const existing = await socket.call('robot.modelCall', 'Users', 'findOneByEmailAddress', [testy.email])
+    if (existing) await socket.call('deleteUser', existing._id)
+  })
   after(async () => {
-    await socket.logout()
     await user.deleteAll()
+    await socket.logout()
     await socket.close()
     silence(false)
   })
@@ -49,10 +57,6 @@ describe('[sims]', () => {
       })
     })
     describe('.create', () => {
-      beforeEach(async () => {
-        await user.deleteUsername(testy.username)
-        await user.deleteUsername(user.safeName(testy.name))
-      })
       it('creates user from full attributes', async () => {
         const record = await user.create(testy)
         expect(record.account).to.eql(testy)
@@ -110,7 +114,7 @@ describe('[sims]', () => {
     })
     describe('.joinRoomWithUser', () => {
       it('joins the created user to a room', async () => {
-        const record = await user.random()
+        const record = await user.create(testy)
         const rid = 'GENERAL'
         await user.joinRoomWithUser(record.id, rid)
         const { messages } = await socket.call('getChannelHistory', {
@@ -122,11 +126,11 @@ describe('[sims]', () => {
     })
     describe('.leaveRoomWithUser', () => {
       it('leaves the created user from a room', async () => {
-        const record = await user.random()
+        const record = await user.create(testy)
         const rid = 'GENERAL'
         await user.joinRoomWithUser(record.id, rid)
+        await delay(100)
         await user.leaveRoomWithUser(record.id, rid)
-        await socket.login()
         const { messages } = await socket.call('getChannelHistory', {
           rid, inclusive: true, count: 1
         })
@@ -145,7 +149,7 @@ describe('[sims]', () => {
         expect(data!.roles).to.eql(['bot', 'user'])
       })
     })
-    describe('deleteUser', () => {
+    describe('.deleteUser', () => {
       it('deletes user by ID', async () => {
         const record = await user.random()
         await user.deleteUser(record.id)

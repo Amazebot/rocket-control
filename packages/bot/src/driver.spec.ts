@@ -23,7 +23,7 @@ async function lastMessages (rid: string, inclusive = true, count = 1) {
   return messages as IMessage[]
 }
 
-describe('driver', () => {
+describe('[bot] driver', () => {
   before(async () => {
     simUser = await user.create({ name: 'driver-test-user', password: 'pass' })
     simName = simUser.account.username
@@ -220,16 +220,17 @@ describe('driver', () => {
   describe('.sendToRoomId', () => {
     before(() => driver.login())
     it('sends string to the given room id', async () => {
-      const sent = await driver.sendToRoomId('SDK test `sendToRoomId`', simChannel.id)
-      expect(sent[0]).to.include.all.keys(['msg', 'rid', '_id'])
+      const msg = 'SDK test `sendToRoomId`'
+      await driver.sendToRoomId(msg, simChannel.id)
+      const last = await lastMessages(simChannel.id)
+      expect(last[0].msg).to.equal(msg)
     })
     it('sends array of strings to the given room id', async () => {
-      const sent = await driver.sendToRoomId([
-        'SDK test `sendToRoomId` A',
-        'SDK test `sendToRoomId` B'
-      ], simChannel.id)
-      expect(sent[0]).to.include.all.keys(['msg', 'rid', '_id'])
-      expect(sent[1]).to.include.all.keys(['msg', 'rid', '_id'])
+      const msgA = 'SDK test `sendToRoomId` A'
+      const msgB = 'SDK test `sendToRoomId` B'
+      await driver.sendToRoomId([msgA, msgB], simChannel.id)
+      const last = await lastMessages(simChannel.id, true, 2)
+      expect([last[1].msg, last[0].msg]).to.eql([msgA, msgB])
     })
   })
   describe('.sendToRoom', () => {
@@ -252,17 +253,17 @@ describe('driver', () => {
     before(() => driver.login())
     it('sends string to the given room name', async () => {
       const msg = 'SDK test `sendDirectToUser`'
-      const directId = driver.id + simUser.id
+      const { rid } = await driver.asyncCall('createDirectMessage', simName)
       await driver.sendDirectToUser(msg, simName)
-      const last = await lastMessages(directId)
+      const last = await lastMessages(rid)
       expect(last[0].msg).to.equal(msg)
     })
     it('sends array of strings to the given room name', async () => {
       const msgA = 'SDK test `sendDirectToUser` A'
       const msgB = 'SDK test `sendDirectToUser` B'
-      const directId = driver.id + simUser.id
+      const { rid } = await driver.asyncCall('createDirectMessage', simName)
       await driver.sendDirectToUser([msgA, msgB], simName)
-      const last = await lastMessages(directId, true, 2)
+      const last = await lastMessages(rid, true, 2)
       expect([last[1].msg, last[0].msg]).to.eql([msgA, msgB])
     })
   })

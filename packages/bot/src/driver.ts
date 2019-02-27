@@ -268,21 +268,29 @@ export class Driver {
     return this.asyncCall('sendMessage', message) as Promise<IMessageReceipt>
   }
 
+  /** Send array of message objects. */
+  async sendMessages (messages: IMessage[]) {
+    const sent = []
+    for (const message of messages) {
+      const result = await this.sendMessage(message) as IMessageReceipt
+      sent.push(result)
+    }
+    return sent
+  }
+
   /**
    * Prepare and send string/s to specified room ID.
    * @param contents Accepts message text string or array of strings.
    * @param roomId  ID of the target room to use in send.
    */
-  sendToRoomId (contents: IMessageContents, roomId: string) {
-    let sends: Promise<IMessageReceipt>[] = []
+  async sendToRoomId (contents: IMessageContents, roomId: string) {
+    const messages = []
     if (!Array.isArray(contents)) {
-      sends.push(this.sendMessage(this.prepareMessage(contents, roomId)))
+      messages.push(this.prepareMessage(contents, roomId))
     } else {
-      sends = contents.map((text) => {
-        return this.sendMessage(this.prepareMessage(text, roomId))
-      })
+      contents.map((text) => messages.push(this.prepareMessage(text, roomId)))
     }
-    return Promise.all(sends)
+    return this.sendMessages(messages)
   }
 
   /**

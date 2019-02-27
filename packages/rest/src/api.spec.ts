@@ -11,7 +11,7 @@ let sim: user.Record // Mock user
 let simAccount: user.IUserAccount
 let socket: Socket // Socket connection - populated in before hooks
 
-describe('api', () => {
+describe('[rest] api', () => {
   before(async () => {
     silence()
     socket = new Socket()

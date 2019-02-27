@@ -14,7 +14,7 @@ mockSocket.call.withArgs('methodTwo', 'key2').resolves({ result: 'value2' })
 
 silence() // suppress log during tests (disable this while developing tests)
 
-describe('cache', () => {
+describe('[bot] cache', () => {
   beforeEach(() => mockSocket.call.resetHistory())
   describe('.use', () => {
     it('calls apply to instance', async () => {

@@ -15,9 +15,10 @@ let testId: string
 
 describe('[sims]', () => {
   before(async () => {
-    const { username } = await socket.login()
+    await socket.login()
     await socket.call('authorization:saveRole', { name: 'robot' })
-    await socket.call('authorization:addUserToRole', 'robot', username)
+    await socket.call('authorization:addUserToRole', 'robot', socket.user!.username)
+      .catch(console.log)
     await socket.call('createChannel', testName)
       .catch(() => socket.call('getRoomIdByNameOrId', testName))
       .then((result) => testId = (result.rid) ? result.rid : result)
