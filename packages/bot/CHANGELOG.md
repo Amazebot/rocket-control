@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/Amazebot/rocket-control/compare/@amazebot/rocket-bot@0.1.0...@amazebot/rocket-bot@0.1.1) (2019-03-06)
+
+
+### Bug Fixes
+
+* **bot:** compile error on 0.1.0 ([3f828d9](https://github.com/Amazebot/rocket-control/commit/3f828d9))
+
+
+
+
+
 # 0.1.0 (2019-02-27)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@amazebot/rocket-bot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Consume Rocket.Chat message streams and automate method calls.",
   "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/bot",
   "repository": "git@github.com:Amazebot/rocket-control.git",
