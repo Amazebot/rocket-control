@@ -284,7 +284,7 @@ export class Driver {
    * @param roomId  ID of the target room to use in send.
    */
   async sendToRoomId (contents: IMessageContents, roomId: string) {
-    const messages = []
+    const messages: Message[] = []
     if (!Array.isArray(contents)) {
       messages.push(this.prepareMessage(contents, roomId))
     } else {
