@@ -27,6 +27,7 @@ async function useSim () {
   else sim.id = await socket.call('insertOrUpdateUser', sim)
 }
 async function removeSim () {
+  if (!socket) return
   await socket.login()
   const users = await socket.call('getFullUserData', {
     username: sim.username,
@@ -49,8 +50,17 @@ describe('[socket]', () => {
     })
     describe('constructor', () => {
       it('sets host to default websocket host', () => {
-        socket = new Socket()
-        expect(socket.host).to.equal('ws://localhost:3000/websocket')
+        const testSocket = new Socket()
+        expect(testSocket.host).to.equal('ws://localhost:3000/websocket')
+      })
+      it('sets host to ws version of url if given', () => {
+        const testSocket = new Socket({ host: 'http://my.server' })
+        expect(testSocket.host).to.equal('ws://my.server/websocket')
+      })
+      it('sets ssl and uses wss if given https host', () => {
+        const testSocket = new Socket({ host: 'https://my.server' })
+        expect(testSocket.config.ssl).to.equal(true)
+        expect(testSocket.host).to.equal('wss://my.server/websocket')
       })
     })
     describe('.open', () => {
@@ -65,6 +75,12 @@ describe('[socket]', () => {
         await socket.open()
           .catch((err) => expect(typeof err).to.equal('undefined'))
         expect(socket.session).to.have.lengthOf(17)
+      })
+      it('connects to open.rocket.chat over https', async () => {
+        const openSocket = new Socket({ host: 'https://open.rocket.chat', ssl: false })
+        await openSocket.open()
+          .catch((err) => expect(typeof err).to.equal('undefined'))
+        expect(openSocket.connected).to.equal(true)
       })
     })
     describe('.close', () => {

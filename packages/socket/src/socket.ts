@@ -64,11 +64,12 @@ export class Socket {
     public resume: ILoginResult | null = null
   ) {
     const host = instance.get('url')
-    const ssl = host.toLowerCase().startsWith('https') || instance.get('ssl')
+    const ssl = instance.get('ssl')
     const reopen = 20 * 1000 // 20 second connection attempts
     const ping = 2 * 1000 // 2 second keep-alive ping
     this.config = Object.assign({ host, ssl, reopen, ping }, options)
-    this.host = `${hostToWS(this.config.host, this.config.useSsl)}/websocket`
+    this.config.ssl = this.config.host.toLowerCase().startsWith('https')
+    this.host = `${hostToWS(this.config.host, this.config.ssl)}/websocket`
   }
 
   /**

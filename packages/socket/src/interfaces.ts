@@ -1,7 +1,7 @@
 /**
  * Connection options type
  * @param host        Host URL:PORT, converted to websocket protocol
- * @param useSsl      Use SSL (https/wss) to connect
+ * @param ssl         Use SSL (https/wss) to connect
  * @param timeout     How long to wait (ms) before abandoning connection
  * @param reopen      ms interval before attempting reopens on disconnect
  * @param ping        ms interval between each ping
@@ -10,7 +10,7 @@
  */
 export interface IOptions {
   host: string
-  useSsl: boolean
+  ssl: boolean
   timeout: number
   reopen: number
   ping: number

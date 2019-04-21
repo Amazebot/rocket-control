@@ -18,7 +18,7 @@ the console.
 #### `new Socket()`
 
 Accepts options object, or uses defaults from environment config. Attributes can
-include `host` *string* and `useSsl` *boolean*.
+include `host` *string* and `ssl` *boolean*.
 
 Creates a websocket handler instance to manage the connection with Rocket.Chat.
 
