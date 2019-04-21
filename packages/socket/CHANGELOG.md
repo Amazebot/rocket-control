@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/Amazebot/rocket-control/compare/@amazebot/rocket-socket@0.1.0...@amazebot/rocket-socket@0.1.1) (2019-04-21)
+
+
+### Bug Fixes
+
+* **socket:** SSL detection ([a156865](https://github.com/Amazebot/rocket-control/commit/a156865))
+
+
+
+
+
 # [0.1.0](https://github.com/Amazebot/rocket-control/compare/@amazebot/rocket-socket@0.0.1...@amazebot/rocket-socket@0.1.0) (2019-02-27)
 
 

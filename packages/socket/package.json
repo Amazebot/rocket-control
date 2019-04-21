@@ -1,6 +1,6 @@
 {
   "name": "@amazebot/rocket-socket",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Communicate with Rocket.Chat Realtime API via websocket (DDP).",
   "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/socket",
   "repository": "git@github.com:Amazebot/rocket-control.git",

@@ -1,6 +1,6 @@
 {
   "name": "@amazebot/rocket-rest",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Simple handlers for calling Rocket.Chat REST API endpoints.",
   "homepage": "https://github.com/Amazebot/rocket-control/tree/master/packages/rest",
   "repository": "git@github.com:Amazebot/rocket-control.git",
@@ -38,8 +38,8 @@
   "dependencies": {
     "@amazebot/config": "^0.1.1",
     "@amazebot/logger": "^0.1.1",
-    "@amazebot/rocket-sims": "^0.1.0",
-    "@amazebot/rocket-socket": "^0.1.0",
+    "@amazebot/rocket-sims": "^0.1.1",
+    "@amazebot/rocket-socket": "^0.1.1",
     "axios": "^0.18.0"
   }
 }
